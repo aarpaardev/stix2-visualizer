@@ -1,0 +1,61 @@
+{
+  "name": "stix-visualizer",
+  "version": "1.0.0",
+  "description": "This project provides a robust and user-friendly interface for visualizing and interacting with STIX (Structured Threat Information eXpression) data. Designed for cybersecurity professionals, researchers, and enthusiasts, this tool helps you analyze and understand complex threat intelligence relationships and data structures with ease.",
+  "main": "index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mmali277/STIX-Visualizer.git"
+  },
+  "keywords": [
+    "stix",
+    "visualizer",
+    "cyber",
+    "security",
+    "cybox",
+    "sigma",
+    "yara"
+  ],
+  "author": "Muhammad Haider Ali Khan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mmali277/STIX-Visualizer/issues"
+  },
+  "homepage": "https://github.com/mmali277/STIX-Visualizer#readme",
+  "devDependencies": {
+    "@chromatic-com/storybook": "^1.5.0",
+    "@storybook/addon-essentials": "^8.1.10",
+    "@storybook/addon-interactions": "^8.1.10",
+    "@storybook/addon-links": "^8.1.10",
+    "@storybook/addon-onboarding": "^8.1.10",
+    "@storybook/addon-webpack5-compiler-swc": "^1.0.4",
+    "@storybook/blocks": "^8.1.10",
+    "@storybook/react": "^8.1.10",
+    "@storybook/react-webpack5": "^8.1.10",
+    "@storybook/test": "^8.1.10",
+    "@types/node": "^20.14.7",
+    "@types/three": "^0.176.0",
+    "@typescript-eslint/eslint-plugin": "^7.13.1",
+    "@typescript-eslint/parser": "^7.13.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-storybook": "^0.8.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "storybook": "^8.1.10",
+    "typescript": "^5.5.2"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "dependencies": {
+    "react-force-graph": "^1.44.4"
+  }
+}
