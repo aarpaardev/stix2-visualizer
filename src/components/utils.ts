@@ -127,7 +127,7 @@ export const objectExists = (objectId: string, objects: Array<StixObject>): bool
 export const formatData = (
   data: Record<string, unknown> | JSON,
   nodeWidth: number,
-  showNodeLabel = false,
+  showNodeLabel = true,
   showLinkLabel = true,
   iconShape: 'round' = 'round',
 ): GraphData => {
@@ -168,6 +168,26 @@ export const formatData = (
                 val: nodeWidth,
               }
             );
+          }
+          /**
+           * Also add marking definition as relation.
+           */
+          if(
+            object.object_marking_refs &&
+            Array.isArray(object.object_marking_refs) &&
+            object.object_marking_refs.length > 0
+          ){
+            object.object_marking_refs.forEach((ref) => {
+              if(objectExists(ref, stixBundle.objects)){
+                graphData.links.push(
+                  {
+                    source: ref,
+                    target: object.id,
+                    label: showLinkLabel ? 'applies-to' : undefined,
+                  }
+                )
+              }
+            })
           }
         }
     }
