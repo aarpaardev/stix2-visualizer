@@ -1,14 +1,15 @@
-import { Stix2Objects, IRelationLabelOptions } from './types'
+import { GraphData } from '../stix2-visualizer';
+import { Stix2ObjectTypes, IRelationLabelOptions, StixBundle, StixObject } from './types'
 
 /**
  * Load icons for stix2 objects
  * @param {round} variant icon variant such as round, square
- * @returns {Partial<Record<Stix2Objects, HTMLImageElement>>}
+ * @returns {Partial<Record<Stix2ObjectTypes, HTMLImageElement>>}
  */
-export const loadIcons = (variant: 'round'): Partial<Record<Stix2Objects, HTMLImageElement>> => {
-  const icons: Partial<Record<Stix2Objects, HTMLImageElement>>= {}
-  for (const [key, value] of Object.entries(Stix2Objects)) {
-    icons[key as Stix2Objects] = createImage(value);
+export const loadIcons = (variant: 'round'): Partial<Record<Stix2ObjectTypes, HTMLImageElement>> => {
+  const icons: Partial<Record<Stix2ObjectTypes, HTMLImageElement>>= {}
+  for (const value of Object.values(Stix2ObjectTypes)) {
+    icons[value as Stix2ObjectTypes] = createImage(value);
   }
   return icons
 }
@@ -20,7 +21,7 @@ export const loadIcons = (variant: 'round'): Partial<Record<Stix2Objects, HTMLIm
  */
 const createImage = (objectType:string): HTMLImageElement => {
   const image = new Image();
-  image.src = require(`../assets/stix2Icons/stix2_${objectType}_icon_tiny_round_v1.png`);
+  image.src = require(`../assets/stix2Icons/stix2-${objectType}-icon-tiny-round-v1.png`);
   return image
 }
 
@@ -104,3 +105,75 @@ export function drawCurvedLine(
   }
 }
 
+  /**
+ * Check if stix object exists
+ * @param {string} objectId id of object to find
+ * @param {Arra<StixObject>} objects stix object lists
+ * @returns {boolean}
+ */
+export const objectExists = (objectId: string, objects: Array<StixObject>): boolean => {
+  return objects.some(object => object.id === objectId);
+}
+
+  /**
+ * Transform stix data into graph data.
+ * @param {Record<string, unknown> | JSON} data Stix2 object name
+ * @param {number} nodeWidth Node width
+ * @param {boolean} showNodeLabel Whether to show label on node
+ * @param {boolean} showLinkLabel Whether to show label on link
+ * @param {'round'} iconShape In which shape the icons should be
+ * @returns {GraphData}
+ */
+export const formatData = (
+  data: Record<string, unknown> | JSON,
+  nodeWidth: number,
+  showNodeLabel = false,
+  showLinkLabel = true,
+  iconShape: 'round' = 'round',
+): GraphData => {
+  const graphData: GraphData = {links:[], nodes:[]};
+  const stixBundle = data as StixBundle;
+  if(stixBundle && stixBundle.objects){
+    
+    const icons = loadIcons(iconShape);
+    stixBundle.objects.forEach(object => {
+      if(typeof object.type === 'string'){
+        if(object.type === Stix2ObjectTypes.Relationship){
+          /**
+           * Make sure the node exists, for which
+           * a relation has already been created.
+           */
+          if(
+            object.source_ref &&
+            object.target_ref &&
+            objectExists(object.source_ref, stixBundle.objects) &&
+            objectExists(object.target_ref, stixBundle.objects)
+            ){  
+            graphData.links.push(
+              {
+                source: object.source_ref,
+                target: object.target_ref,
+                label: showLinkLabel && object.relationship_type ? object.relationship_type : undefined,
+              }
+            );
+          }
+        }
+        else{
+          if(object.id){
+            graphData.nodes.push(
+              {
+                id: object.id,
+                name: showNodeLabel ? object.name ?? object.type : undefined,
+                img: icons[object.type] ?? icons[Stix2ObjectTypes.CustomObject],
+                val: nodeWidth,
+              }
+            );
+          }
+        }
+    }
+    })
+  }
+  console.log(graphData);
+  console.log('aaya')
+  return graphData
+}

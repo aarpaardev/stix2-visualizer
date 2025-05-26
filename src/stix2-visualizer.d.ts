@@ -1,5 +1,8 @@
 type NodeObject<NodeType = {}> = NodeType & {
-  id?: string | number;
+  id: string | number;
+  img?: HTMLImageElement;
+  name?: string;
+  val?: number;
   x?: number;
   y?: number;
   z?: number;
@@ -16,9 +19,14 @@ type LinkObject<NodeType = {}, LinkType = {}> = LinkType & {
   source?: string | number | NodeObject<NodeType>;
   target?: string | number | NodeObject<NodeType>;
   color?: string;
-  width?: number;
+  // width?: number;
   [others: string]: any;
 };
+
+interface GraphData<NodeType = {}, LinkType = {}> {
+  nodes: NodeObject<NodeType>[];
+  links: LinkObject<NodeType, LinkType>[];
+}
 
 interface IRelationLabelOptions {
   labelFont?: string,
@@ -51,4 +59,4 @@ interface IStix2Visualizer {
   relationLabelOptions?: IRelationLabelOptions;
 }
 
-export {NodeObject, LinkObject, IRelationOptions, IStix2Visualizer}
+export {NodeObject, LinkObject, IRelationOptions, IStix2Visualizer, GraphData}
