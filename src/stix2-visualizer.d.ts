@@ -28,35 +28,52 @@ interface GraphData<NodeType = {}, LinkType = {}> {
   links: LinkObject<NodeType, LinkType>[];
 }
 
-interface IRelationLabelOptions {
-  labelFont?: string,
-  labelFontSize?: number,
-  labelBackgroundColor?: string;
-  labelColor?: string;
-  labelOnHover?: ((link: LinkObject) => string) | string;
-  displayLabel: boolean;
+interface ILabelOptions {
+  font?: string,
+  fontSize?: number,
+  label?: string,
+  backgroundColor?: string;
+  color?: string;
+  display?: boolean;
 }
 
-interface IRelationDirectionOptions { 
+interface ILinkDirectionOptions { 
   arrowLength?: ((link: LinkObject) => number) | number;
   arrowRelativePositions?: ((link: LinkObject) => number) | number;
   directionalParticles?: ((link: LinkObject) => number) | number;
   directionalParticleSpeed?: ((link: LinkObject) => number) | number;
   directionalParticleWidth?: ((link: LinkObject) => number) | number;
-  directionalParticlesColor?: ((link: LinkObject) => string) | string;
+  directionalParticlesAndArrowColor?: ((link: LinkObject) => string) | string;
   displayDirections: boolean;
 }
 
-interface IRelationOptions {
-  width?: number;
+interface ILinkOptions {
+  width?: ((link: LinkObject) => number) | number;
   curvature?: number;
+  distance?: number;
   color?: string;
-
+  disableDefaultHoverBehavior?: boolean;
+  onHover?: ((link: LinkObject | null) => void);
 }
+
+interface INodeOptions {
+  disableDefaultHoverBehavior?: boolean;
+  onHover?: ((link: NodeObject | null) => void);
+}
+
 interface IStix2Visualizer {
-  relationOptions?: IRelationOptions;
-  directionOptions?: IRelationDirectionOptions;
-  relationLabelOptions?: IRelationLabelOptions;
+  nodeOptions?: INodeOptions;
+  relationOptions?: ILinkOptions;
+  directionOptions?: ILinkDirectionOptions;
+  relationLabelOptions?: ILabelOptions;
+  nodeLabelOptions?: ILabelOptions;
 }
 
-export {NodeObject, LinkObject, IRelationOptions, IStix2Visualizer, GraphData}
+export {
+  NodeObject,
+  LinkObject,
+  ILinkOptions,
+  IStix2Visualizer,
+  GraphData,
+  ILabelOptions
+}

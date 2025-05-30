@@ -1,16 +1,16 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ForceGraph3D, ForceGraph2D } from 'react-force-graph';
 import { drawCurvedLine, formatData, loadIcons } from './utils';
-import { GraphData, IStix2Visualizer, LinkObject, NodeObject } from '../stix2-visualizer';
-import { IRelationLabelOptions } from './types';
+import { GraphData, ILabelOptions, IStix2Visualizer, LinkObject, NodeObject } from '../stix2-visualizer';
+// import { IRelationLabelOptions } from './types';
 
-const defaultValues = {
-  curvature: 0.25,
-  linkColor: '#00c00a',
-  linkWidth: 1,
-  linkLabelFontSize: 5
-}
-const icons = loadIcons('round');
+// const defaultValues = {
+//   curvature: 0.25,
+//   particlesColor: 'rgb(0, 0, 0)',
+//   linkWidth: 1,
+//   linkLabelFontSize: 5,
+// }
+// const icons = loadIcons('round');
 // const dataSample: GraphData = {
 //   "nodes": [ 
 //       { 
@@ -1391,27 +1391,33 @@ const sampleJsonData = {
 export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     const properties: IStix2Visualizer = {
       relationOptions: {
-        width: props?.relationOptions?.width ?? defaultValues.linkWidth,
-        color: props?.relationOptions?.color ?? '#00c00a',
-        curvature: props?.relationOptions?.curvature ?? defaultValues.curvature,
+        disableDefaultHoverBehavior: false,
+        color: 'rgba(126,126,126, 0.6)',
+        distance: 60,
+        curvature: 0.25,
         ...props.relationOptions
       },
       directionOptions: {
-        arrowLength: props?.directionOptions?.arrowLength ?? 3.5,
-        arrowRelativePositions: props?.directionOptions?.arrowRelativePositions ?? 0.95,
-        directionalParticleWidth: props?.directionOptions?.directionalParticleSpeed ?? 0.5,
-        directionalParticles: props?.directionOptions?.directionalParticles ?? 10,
-        directionalParticleSpeed: props?.directionOptions?.directionalParticleSpeed ?? 0.005,
-        directionalParticlesColor: props?.directionOptions?.directionalParticlesColor ?? '#00c00a',
-        displayDirections: props?.directionOptions?.displayDirections ?? true,
+        arrowLength: 3.5,
+        arrowRelativePositions: 0.95,
+        directionalParticles: 10,
+        directionalParticleWidth: 1,
+        directionalParticleSpeed: 0.005,
+        directionalParticlesAndArrowColor: 'rgba(0, 0, 0, 0, 0)',
+        displayDirections: true,
         ...props.directionOptions
       },
-      relationLabelOptions:{
-        labelFontSize: props?.relationLabelOptions?.labelFontSize ?? defaultValues.linkLabelFontSize,
-        labelColor: props?.relationLabelOptions?.labelColor ?? '#000000',
-        displayLabel: props?.relationLabelOptions?.displayLabel ?? true,
+      relationLabelOptions: {
+        fontSize: 4,
+        color: 'rgba(126,126,126, 0.9)',
+        display: true,
         ...props.relationLabelOptions,
+      },
+      nodeOptions: {
+        disableDefaultHoverBehavior: false,
+        ...props.nodeOptions,
       }
+
     }
     const fgRef = useRef<any>();
     const graphData = formatData(sampleJsonData, 0.1);
@@ -1434,6 +1440,20 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     const gData = graphData; //dataSample; // genRandomTree(40); //dataSample; //
     console.log(gData);
     const NODE_R = 8;
+    useEffect(() => {
+      const fg = fgRef.current;
+      /**
+       * By default distance is automatically
+       * adjusted between two two links.
+       */
+      if (
+        properties.relationOptions?.distance &&
+        typeof properties.relationOptions?.distance === 'number' &&
+        fg
+      ) {
+          fg.d3Force('link').distance(properties.relationOptions?.distance); // same as linkDistance
+      }
+    }, [properties.relationOptions?.distance])
     // const data = useMemo(() => {
 
     //     // cross-link node objects
@@ -1555,30 +1575,56 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
        * Highlight Nodes and Edges
        */
       nodeRelSize={NODE_R}
-      linkWidth={link => highlightLinks.has(link) ? 5 : 1}
-      linkDirectionalParticleWidth={link => highlightLinks.has(link) ? 4 : 0.5} // by default we are keeping 0.5 size for direction particles 
-      linkLabel={properties.relationLabelOptions?.labelOnHover}
-      linkColor={properties.directionOptions?.directionalParticlesColor &&
-        typeof properties.directionOptions.directionalParticlesColor === 'string'? 
+      linkWidth={(link) => {
+        if(
+          !properties.relationOptions?.disableDefaultHoverBehavior &&
+          highlightLinks.has(link)
+        ) {
+          return 5;
+        }
+        else if(typeof properties.relationOptions?.width === 'number'){
+          return properties.relationOptions?.width;
+        }
+        else if(properties.relationOptions?.width){
+          properties.relationOptions?.width(link);
+        }
+        return 0;
+      }}
+      linkDirectionalParticleWidth={(link) => {
+        if(highlightLinks.has(link)) {
+          return 4;
+        }
+        else if(typeof properties.directionOptions?.directionalParticleWidth === 'number'){
+          return properties.directionOptions?.directionalParticleWidth;
+        }
+        else if(properties.directionOptions?.directionalParticleWidth){
+          properties.directionOptions?.directionalParticleWidth(link);
+        }
+        return 0;
+      }} // by default we are keeping 0.5 size for direction particles 
+      // linkLabel={properties.relationLabelOptions?.l} //not needed
+      linkColor={properties.directionOptions?.directionalParticlesAndArrowColor &&
+        typeof properties.directionOptions.directionalParticlesAndArrowColor === 'string'? 
         /**
          * Its a bug in this library, so if a string is provided
          * pass it to the function to make it work.  
          */
-        _ => properties.directionOptions?.directionalParticlesColor as string :
+        _ => properties.directionOptions?.directionalParticlesAndArrowColor as string :
         properties.relationOptions?.color}
       linkCanvasObject={(link, ctx) => {
-        let labelOptions: IRelationLabelOptions | undefined = undefined;
+        let labelOptions: ILabelOptions | undefined = undefined;
         if(link.label){
           labelOptions = {
-            label: link.label,
-            fontSize: properties.relationLabelOptions?.labelFontSize || defaultValues.linkLabelFontSize,
-            backgroundColor: properties.relationLabelOptions?.labelBackgroundColor,
-            color: properties.relationLabelOptions?.labelColor,
-            font: properties.relationLabelOptions?.labelFont
+            label: link.label || properties.relationLabelOptions?.label,
+            fontSize: properties.relationLabelOptions?.fontSize,
+            backgroundColor: properties.relationLabelOptions?.backgroundColor,
+            color: properties.relationLabelOptions?.color,
+            font: properties.relationLabelOptions?.font,
+            display: properties.relationLabelOptions?.display
           } 
         }
-        const color = link.color || typeof properties.relationOptions?.color || defaultValues.linkColor;
-        const width = link.width || typeof properties.relationOptions?.width || defaultValues.linkWidth;
+        const color:string = link.color || properties.relationOptions?.color || '#0000';
+        const width = link.width || typeof properties.relationOptions?.width || 0;
         drawCurvedLine(ctx, {
           x: (link.source as NodeObject)?.x || 0,
           y: (link.source as NodeObject)?.y || 0,
@@ -1587,7 +1633,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
           x: (link.target as NodeObject)?.x || 0,
           y: (link.target as NodeObject)?.y || 0,
         },
-        properties.relationOptions?.curvature || defaultValues.curvature,
+        properties.relationOptions?.curvature || 0,
         color,
         width as number,
         labelOptions

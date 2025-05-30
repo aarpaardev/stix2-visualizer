@@ -15,4 +15,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const DefaultStix: Story = {};
+export const DefaultStix: Story = {
+  // args: {
+  //   relationOptions: {
+  //     distance: 120
+  //   }
+  // }
+};
