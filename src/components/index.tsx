@@ -1429,7 +1429,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
 
     }
     const fgRef = useRef<any>();
-    const graphData = formatData(sampleJsonData, 0.1);
   const initialZoomRef  = useRef<number | null>(null); 
   const ZOOM_OUT_THRESHOLD = 0.80; // Only trigger if zoom-out is more than 20%
 
@@ -1493,9 +1492,11 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     // Update previous zoom scale
     // prevZoomRef.current = k;
   };
-
-    const gData = graphData; //dataSample; // genRandomTree(40); //dataSample; //
-    console.log(gData);
+const transformedGraph = useMemo(() => {
+  return formatData(sampleJsonData, 0.1);
+}, [sampleJsonData]);
+    // const gData = graphData; //dataSample; // genRandomTree(40); //dataSample; //
+    // console.log(gData);
     const NODE_R = 8;
     useEffect(() => {
       const fg = fgRef.current;
@@ -1567,29 +1568,11 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
 
         updateHighlight();
       };
-
-      const paintRing = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) => {
-        // add ring just for highlighted nodes
-        ctx.beginPath();
-        if(node.x && node.y){
-            ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
-        }
-        ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
-        ctx.fill();
-      }, [hoverNode]);
-      // console.log('AGAAAAAAAAAAIn')
-      return <ForceGraph2D
-      nodeLabel="id"
-      ref={fgRef}
-      graphData={gData}
-      linkDirectionalArrowLength={properties.directionOptions?.arrowLength}
-      linkDirectionalArrowRelPos={properties.directionOptions?.arrowRelativePositions}
-      linkCurvature={properties.relationOptions?.curvature}
-      nodeCanvasObject={(node, ctx) => {
+const drawNode = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) => {
         const size = properties.nodeOptions?.size || 0;
-        // console.log(node);
+        console.log('node');
         if(node.x && node.y && node.img){
-          console.log(node.img);
+          // console.log(node.img);
           ctx.drawImage(node.img, node.x - size / 2, node.y - size / 2, size, size);
        
         
@@ -1623,70 +1606,10 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         //     ctx.textBaseline = 'middle';
         //     ctx.fillStyle = node.color;
         //     ctx.fillText(label?.toString() || 'Label Not Found!', node.x || 0, (node.y || 0)+10);
-      }}
-      // nodePointerAreaPaint={(node, color, ctx) => {
-      //   if(node.x && node.y){
-      //     const size = 12;
-      //     ctx.fillStyle = color;
-      //     ctx.fillRect(node.x - size / 2, node.y - size / 2, size, size); // draw square as pointer trap
-      // }
-      // }}
-      /**
-       * Focus on Node
-       */
-      onNodeClick={handleClick}
-      /**
-       * Show Direction Particles
-       */
-      linkDirectionalParticles={properties.directionOptions?.directionalParticles}
-      linkDirectionalParticleSpeed={properties.directionOptions?.directionalParticleSpeed}
-      /**
-       * Fit to Canvas when interacted with nodes
-       */
-      cooldownTicks={50}
-      onEngineStop={() => fgRef.current.zoomToFit(400)}
-      onZoom={handleZoom}
-      /**
-       * Highlight Nodes and Edges
-       */
-      nodeRelSize={NODE_R}
-      linkWidth={(link) => {
-        if(
-          !properties.relationOptions?.disableDefaultHoverBehavior &&
-          highlightLinks.has(link)
-        ) {
-          return 5;
-        }
-        else if(typeof properties.relationOptions?.width === 'number'){
-          return properties.relationOptions?.width;
-        }
-        else if(properties.relationOptions?.width){
-          properties.relationOptions?.width(link);
-        }
-        return 0;
-      }}
-      linkDirectionalParticleWidth={(link) => {
-        if(highlightLinks.has(link)) {
-          return 4;
-        }
-        else if(typeof properties.directionOptions?.directionalParticleWidth === 'number'){
-          return properties.directionOptions?.directionalParticleWidth;
-        }
-        else if(properties.directionOptions?.directionalParticleWidth){
-          properties.directionOptions?.directionalParticleWidth(link);
-        }
-        return 0;
-      }} // by default we are keeping 0.5 size for direction particles 
-      // linkLabel={properties.relationLabelOptions?.l} //not needed
-      linkColor={properties.directionOptions?.directionalParticlesAndArrowColor &&
-        typeof properties.directionOptions.directionalParticlesAndArrowColor === 'string'? 
-        /**
-         * Its a bug in this library, so if a string is provided
-         * pass it to the function to make it work.  
-         */
-        _ => properties.directionOptions?.directionalParticlesAndArrowColor as string :
-        properties.relationOptions?.color}
-      linkCanvasObject={(link, ctx) => {
+      }, []);
+
+      const drawLink = useCallback((link: LinkObject, ctx: CanvasRenderingContext2D) => {
+        // console.log('bhauo')
         let labelOptions: ILabelOptions | undefined = undefined;
         if(link.label){
           labelOptions = {
@@ -1726,7 +1649,95 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
             // ctx.textBaseline = 'middle';
             // ctx.fillStyle = link.color;
             // ctx.fillText(label?.toString() || 'Label Not Found!', link.x || 0, link.y || 0);
-      }}
+      
+      }, []);
+
+      const particleWidth = useCallback((link: LinkObject) => {
+        // console.log('aaaaaa');
+        if(highlightLinks.has(link)) {
+          return 4;
+        }
+        else if(typeof properties.directionOptions?.directionalParticleWidth === 'number'){
+          return properties.directionOptions?.directionalParticleWidth;
+        }
+        else if(properties.directionOptions?.directionalParticleWidth){
+          properties.directionOptions?.directionalParticleWidth(link);
+        }
+        return 0;
+      }, []);
+
+      const linkWidth = useCallback((link: LinkObject) => {
+        if(
+          !properties.relationOptions?.disableDefaultHoverBehavior &&
+          highlightLinks.has(link)
+        ) {
+          return 5;
+        }
+        else if(typeof properties.relationOptions?.width === 'number'){
+          return properties.relationOptions?.width;
+        }
+        else if(properties.relationOptions?.width){
+          properties.relationOptions?.width(link);
+        }
+        return 0;
+      }, []);
+
+      const paintRing = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) => {
+        // add ring just for highlighted nodes
+        ctx.beginPath();
+        if(node.x && node.y){
+            ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
+        }
+        ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
+        ctx.fill();
+      }, [hoverNode]);
+      console.log('AGAAAAAAAAAAIn')
+      return <ForceGraph2D
+      nodeLabel="id"
+      ref={fgRef}
+      graphData={transformedGraph}
+      linkDirectionalArrowLength={properties.directionOptions?.arrowLength}
+      linkDirectionalArrowRelPos={properties.directionOptions?.arrowRelativePositions}
+      linkCurvature={properties.relationOptions?.curvature}
+      nodeCanvasObject={drawNode}
+      // nodePointerAreaPaint={(node, color, ctx) => {
+      //   if(node.x && node.y){
+      //     const size = 12;
+      //     ctx.fillStyle = color;
+      //     ctx.fillRect(node.x - size / 2, node.y - size / 2, size, size); // draw square as pointer trap
+      // }
+      // }}
+      /**
+       * Focus on Node
+       */
+      onNodeClick={handleClick}
+      /**
+       * Show Direction Particles
+       */
+      linkDirectionalParticles={properties.directionOptions?.directionalParticles}
+      linkDirectionalParticleSpeed={properties.directionOptions?.directionalParticleSpeed}
+      /**
+       * Fit to Canvas when interacted with nodes
+       */
+      cooldownTicks={50}
+      onEngineStop={() => fgRef.current.zoomToFit(400)}
+      onZoom={handleZoom}
+      /**
+       * Highlight Nodes and Edges
+       */
+      nodeRelSize={NODE_R}
+      linkWidth={linkWidth}
+      linkDirectionalParticleWidth={particleWidth} // by default we are keeping 0.5 size for direction particles 
+      // linkLabel={properties.relationLabelOptions?.l} //not needed
+      linkColor={properties.directionOptions?.directionalParticlesAndArrowColor &&
+        typeof properties.directionOptions.directionalParticlesAndArrowColor === 'string'? 
+        /**
+         * Its a bug in this library, so if a string is provided
+         * pass it to the function to make it work.  
+         */
+        _ => properties.directionOptions?.directionalParticlesAndArrowColor as string :
+        properties.relationOptions?.color}
+      linkCanvasObject={drawLink}
       /**
        * Follwoing Highlighting features works only with 2D
        * ----------------------------------------------
