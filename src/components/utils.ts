@@ -70,7 +70,7 @@ export function drawCurvedLine(
   ctx.beginPath();
   ctx.moveTo(from.x, from.y);
   ctx.quadraticCurveTo(cx, cy, to.x, to.y);
-  console.log('Libnk Color', color);
+  // console.log('Libnk Color', color);
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
   ctx.stroke();
@@ -215,7 +215,7 @@ export const formatData = (
     }
     })
   }
-  console.log(graphData);
-  console.log('aaya')
+  // console.log(graphData);
+  // console.log('aaya')
   return graphData
 }

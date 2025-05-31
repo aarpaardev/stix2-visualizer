@@ -34,6 +34,7 @@ interface ILabelOptions {
   backgroundColor?: string;
   color?: string;
   display?: boolean;
+  onZoomOutDisplay?: boolean;
 }
 
 interface ILinkDirectionOptions { 

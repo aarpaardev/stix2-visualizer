@@ -1411,12 +1411,14 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         fontSize: 3 ,
         color: 'rgba(126,126,126, 0.9)',
         display: false,
+        onZoomOutDisplay: false,
         ...props.relationLabelOptions,
       },
       nodeLabelOptions:{
         fontSize: 4,
         color: 'rgba(39, 37, 37, 0.9)',
         display: true,
+        onZoomOutDisplay: false,
         ...props.nodeLabelOptions,
       },
       nodeOptions: {
@@ -1428,6 +1430,8 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     }
     const fgRef = useRef<any>();
     const graphData = formatData(sampleJsonData, 0.1);
+  const initialZoomRef  = useRef<number | null>(null); 
+  const ZOOM_OUT_THRESHOLD = 0.80; // Only trigger if zoom-out is more than 20%
 
     const handleClick = useCallback((node: NodeObject) => {
         // Aim at node from outside it
@@ -1443,6 +1447,52 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
             );
     }
     }, [fgRef]);
+
+    const handleZoom = ({ k }: { k: number; x: number; y: number }) => {
+    if (initialZoomRef.current === null) {
+      initialZoomRef.current = k; // store initial zoom on first call
+      return;
+    }
+    const initialZoom = initialZoomRef.current;
+    console.log(initialZoom, k)
+    if (k < initialZoom * ZOOM_OUT_THRESHOLD) {
+      if(properties.nodeLabelOptions?.onZoomOutDisplay === false){
+        properties.nodeLabelOptions.display = false;
+      }
+      if(properties.relationLabelOptions?.onZoomOutDisplay === false){
+        properties.relationLabelOptions.display = false;
+      }
+      // Call your custom function here
+    }
+    else {
+      if(properties.nodeLabelOptions?.onZoomOutDisplay === false && properties.nodeLabelOptions?.display === false){
+        properties.nodeLabelOptions.display = true;
+      }
+      if(properties.relationLabelOptions?.onZoomOutDisplay === false && properties.relationLabelOptions?.display === false){
+        properties.relationLabelOptions.display = true;
+      }
+    }
+    // const prevZoom = prevZoomRef.current;
+
+    // Detect significant zoom-out
+    // if (k < prevZoom && (prevZoom - k) >= ZOOM_OUT_THRESHOLD) {
+    //   if(properties.nodeLabelOptions?.onZoomOutDisplay === false){
+    //     properties.nodeLabelOptions.display = false;
+    //   }
+    //   if(properties.relationLabelOptions?.onZoomOutDisplay === false){
+    //     properties.relationLabelOptions.display = false;
+    //   }
+      
+    //   console.log('📉 Significant Zoom Out!');
+    //   // 🔁 Trigger your zoom-out function here
+    // }
+    // else{
+
+    // }
+
+    // Update previous zoom scale
+    // prevZoomRef.current = k;
+  };
 
     const gData = graphData; //dataSample; // genRandomTree(40); //dataSample; //
     console.log(gData);
@@ -1527,7 +1577,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
         ctx.fill();
       }, [hoverNode]);
-      console.log('AGAAAAAAAAAAIn')
+      // console.log('AGAAAAAAAAAAIn')
       return <ForceGraph2D
       nodeLabel="id"
       ref={fgRef}
@@ -1595,6 +1645,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
        */
       cooldownTicks={50}
       onEngineStop={() => fgRef.current.zoomToFit(400)}
+      onZoom={handleZoom}
       /**
        * Highlight Nodes and Edges
        */
