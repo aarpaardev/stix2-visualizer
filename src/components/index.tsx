@@ -1429,7 +1429,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
 
     }
     const fgRef = useRef<any>();
-    const graphData = formatData(sampleJsonData, 0.1);
   const initialZoomRef  = useRef<number | null>(null); 
   const ZOOM_OUT_THRESHOLD = 0.80; // Only trigger if zoom-out is more than 20%
 
@@ -1493,9 +1492,11 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     // Update previous zoom scale
     // prevZoomRef.current = k;
   };
-
-    const gData = graphData; //dataSample; // genRandomTree(40); //dataSample; //
-    console.log(gData);
+const transformedGraph = useMemo(() => {
+  return formatData(sampleJsonData, 0.1);
+}, [sampleJsonData]);
+    // const gData = graphData; //dataSample; // genRandomTree(40); //dataSample; //
+    // console.log(gData);
     const NODE_R = 8;
     useEffect(() => {
       const fg = fgRef.current;
@@ -1608,7 +1609,7 @@ const drawNode = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) =
       }, []);
 
       const drawLink = useCallback((link: LinkObject, ctx: CanvasRenderingContext2D) => {
-        console.log('bhauo')
+        // console.log('bhauo')
         let labelOptions: ILabelOptions | undefined = undefined;
         if(link.label){
           labelOptions = {
@@ -1650,6 +1651,37 @@ const drawNode = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) =
             // ctx.fillText(label?.toString() || 'Label Not Found!', link.x || 0, link.y || 0);
       
       }, []);
+
+      const particleWidth = useCallback((link: LinkObject) => {
+        // console.log('aaaaaa');
+        if(highlightLinks.has(link)) {
+          return 4;
+        }
+        else if(typeof properties.directionOptions?.directionalParticleWidth === 'number'){
+          return properties.directionOptions?.directionalParticleWidth;
+        }
+        else if(properties.directionOptions?.directionalParticleWidth){
+          properties.directionOptions?.directionalParticleWidth(link);
+        }
+        return 0;
+      }, []);
+
+      const linkWidth = useCallback((link: LinkObject) => {
+        if(
+          !properties.relationOptions?.disableDefaultHoverBehavior &&
+          highlightLinks.has(link)
+        ) {
+          return 5;
+        }
+        else if(typeof properties.relationOptions?.width === 'number'){
+          return properties.relationOptions?.width;
+        }
+        else if(properties.relationOptions?.width){
+          properties.relationOptions?.width(link);
+        }
+        return 0;
+      }, []);
+
       const paintRing = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) => {
         // add ring just for highlighted nodes
         ctx.beginPath();
@@ -1663,7 +1695,7 @@ const drawNode = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) =
       return <ForceGraph2D
       nodeLabel="id"
       ref={fgRef}
-      graphData={gData}
+      graphData={transformedGraph}
       linkDirectionalArrowLength={properties.directionOptions?.arrowLength}
       linkDirectionalArrowRelPos={properties.directionOptions?.arrowRelativePositions}
       linkCurvature={properties.relationOptions?.curvature}
@@ -1694,34 +1726,8 @@ const drawNode = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) =
        * Highlight Nodes and Edges
        */
       nodeRelSize={NODE_R}
-      linkWidth={(link) => {
-        if(
-          !properties.relationOptions?.disableDefaultHoverBehavior &&
-          highlightLinks.has(link)
-        ) {
-          return 5;
-        }
-        else if(typeof properties.relationOptions?.width === 'number'){
-          return properties.relationOptions?.width;
-        }
-        else if(properties.relationOptions?.width){
-          properties.relationOptions?.width(link);
-        }
-        return 0;
-      }}
-      linkDirectionalParticleWidth={(link) => {
-        console.log('aaaaaa');
-        if(highlightLinks.has(link)) {
-          return 4;
-        }
-        else if(typeof properties.directionOptions?.directionalParticleWidth === 'number'){
-          return properties.directionOptions?.directionalParticleWidth;
-        }
-        else if(properties.directionOptions?.directionalParticleWidth){
-          properties.directionOptions?.directionalParticleWidth(link);
-        }
-        return 0;
-      }} // by default we are keeping 0.5 size for direction particles 
+      linkWidth={linkWidth}
+      linkDirectionalParticleWidth={particleWidth} // by default we are keeping 0.5 size for direction particles 
       // linkLabel={properties.relationLabelOptions?.l} //not needed
       linkColor={properties.directionOptions?.directionalParticlesAndArrowColor &&
         typeof properties.directionOptions.directionalParticlesAndArrowColor === 'string'? 
