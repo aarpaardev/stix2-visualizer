@@ -41,12 +41,14 @@ export function createLabel(
   x: number,
   y:number
   
-) { // Draw the curve
+) {
   if (labelOptions.display) {
     const fontSzie = labelOptions.fontSize || 0;
     const font = labelOptions.font || 'sans-serif';
     const color = labelOptions.color || 'rgba(0, 0, 0, 0)';
-    // Optional: background box for text
+    /**
+     * Optional: background box for text
+     */
     if(labelOptions.backgroundColor){
       ctx.fillStyle = labelOptions.backgroundColor; //'rgba(0, 0, 0, 0.6)';
       const padding = 4;
@@ -155,7 +157,5 @@ export const formatData = (
     }
     })
   }
-  // console.log(graphData);
-  // console.log('aaya')
   return graphData
 }
