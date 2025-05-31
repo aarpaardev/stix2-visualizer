@@ -1567,29 +1567,11 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
 
         updateHighlight();
       };
-
-      const paintRing = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) => {
-        // add ring just for highlighted nodes
-        ctx.beginPath();
-        if(node.x && node.y){
-            ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
-        }
-        ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
-        ctx.fill();
-      }, [hoverNode]);
-      // console.log('AGAAAAAAAAAAIn')
-      return <ForceGraph2D
-      nodeLabel="id"
-      ref={fgRef}
-      graphData={gData}
-      linkDirectionalArrowLength={properties.directionOptions?.arrowLength}
-      linkDirectionalArrowRelPos={properties.directionOptions?.arrowRelativePositions}
-      linkCurvature={properties.relationOptions?.curvature}
-      nodeCanvasObject={(node, ctx) => {
+const drawNode = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) => {
         const size = properties.nodeOptions?.size || 0;
-        // console.log(node);
+        console.log('node');
         if(node.x && node.y && node.img){
-          console.log(node.img);
+          // console.log(node.img);
           ctx.drawImage(node.img, node.x - size / 2, node.y - size / 2, size, size);
        
         
@@ -1623,7 +1605,69 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         //     ctx.textBaseline = 'middle';
         //     ctx.fillStyle = node.color;
         //     ctx.fillText(label?.toString() || 'Label Not Found!', node.x || 0, (node.y || 0)+10);
-      }}
+      }, []);
+
+      const drawLink = useCallback((link: LinkObject, ctx: CanvasRenderingContext2D) => {
+        console.log('bhauo')
+        let labelOptions: ILabelOptions | undefined = undefined;
+        if(link.label){
+          labelOptions = {
+            fontSize: properties.relationLabelOptions?.fontSize,
+            backgroundColor: properties.relationLabelOptions?.backgroundColor,
+            color: properties.relationLabelOptions?.color,
+            font: properties.relationLabelOptions?.font,
+            display: properties.relationLabelOptions?.display
+          } 
+        }
+        const color:string = link.color || properties.relationOptions?.color || '#0000';
+        const width = link.width || typeof properties.relationOptions?.width || 0;
+        drawCurvedLine(ctx, {
+          x: (link.source as NodeObject)?.x || 0,
+          y: (link.source as NodeObject)?.y || 0,
+        },
+        {
+          x: (link.target as NodeObject)?.x || 0,
+          y: (link.target as NodeObject)?.y || 0,
+        },
+        properties.relationOptions?.curvature || 0,
+        color,
+        width as number,
+        link.label,
+        labelOptions
+      );
+            // const fontSize = 12/link.globalScale;
+            // ctx.font = `${fontSize}px Sans-Serif`;
+            // const textWidth = ctx.measureText(link.label).width;
+            // const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
+
+            // ctx.fillStyle = 'rgba(14, 13, 13, 0.8)';
+            // ctx.fillRect((link.x) || 0 - bckgDimensions[0] / 2, link.y || 0  - bckgDimensions[1] / 2, bckgDimensions[0],
+            // bckgDimensions[1]);
+
+            // ctx.textAlign = 'center';
+            // ctx.textBaseline = 'middle';
+            // ctx.fillStyle = link.color;
+            // ctx.fillText(label?.toString() || 'Label Not Found!', link.x || 0, link.y || 0);
+      
+      }, []);
+      const paintRing = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) => {
+        // add ring just for highlighted nodes
+        ctx.beginPath();
+        if(node.x && node.y){
+            ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
+        }
+        ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
+        ctx.fill();
+      }, [hoverNode]);
+      console.log('AGAAAAAAAAAAIn')
+      return <ForceGraph2D
+      nodeLabel="id"
+      ref={fgRef}
+      graphData={gData}
+      linkDirectionalArrowLength={properties.directionOptions?.arrowLength}
+      linkDirectionalArrowRelPos={properties.directionOptions?.arrowRelativePositions}
+      linkCurvature={properties.relationOptions?.curvature}
+      nodeCanvasObject={drawNode}
       // nodePointerAreaPaint={(node, color, ctx) => {
       //   if(node.x && node.y){
       //     const size = 12;
@@ -1666,6 +1710,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         return 0;
       }}
       linkDirectionalParticleWidth={(link) => {
+        console.log('aaaaaa');
         if(highlightLinks.has(link)) {
           return 4;
         }
@@ -1686,47 +1731,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
          */
         _ => properties.directionOptions?.directionalParticlesAndArrowColor as string :
         properties.relationOptions?.color}
-      linkCanvasObject={(link, ctx) => {
-        let labelOptions: ILabelOptions | undefined = undefined;
-        if(link.label){
-          labelOptions = {
-            fontSize: properties.relationLabelOptions?.fontSize,
-            backgroundColor: properties.relationLabelOptions?.backgroundColor,
-            color: properties.relationLabelOptions?.color,
-            font: properties.relationLabelOptions?.font,
-            display: properties.relationLabelOptions?.display
-          } 
-        }
-        const color:string = link.color || properties.relationOptions?.color || '#0000';
-        const width = link.width || typeof properties.relationOptions?.width || 0;
-        drawCurvedLine(ctx, {
-          x: (link.source as NodeObject)?.x || 0,
-          y: (link.source as NodeObject)?.y || 0,
-        },
-        {
-          x: (link.target as NodeObject)?.x || 0,
-          y: (link.target as NodeObject)?.y || 0,
-        },
-        properties.relationOptions?.curvature || 0,
-        color,
-        width as number,
-        link.label,
-        labelOptions
-      );
-            // const fontSize = 12/link.globalScale;
-            // ctx.font = `${fontSize}px Sans-Serif`;
-            // const textWidth = ctx.measureText(link.label).width;
-            // const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
-
-            // ctx.fillStyle = 'rgba(14, 13, 13, 0.8)';
-            // ctx.fillRect((link.x) || 0 - bckgDimensions[0] / 2, link.y || 0  - bckgDimensions[1] / 2, bckgDimensions[0],
-            // bckgDimensions[1]);
-
-            // ctx.textAlign = 'center';
-            // ctx.textBaseline = 'middle';
-            // ctx.fillStyle = link.color;
-            // ctx.fillText(label?.toString() || 'Label Not Found!', link.x || 0, link.y || 0);
-      }}
+      linkCanvasObject={drawLink}
       /**
        * Follwoing Highlighting features works only with 2D
        * ----------------------------------------------
