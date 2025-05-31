@@ -102,12 +102,4 @@ interface ExternalReference {
   hashes?: Record<string, string>;
 }
 
-// interface IRelationLabelOptions {
-//   label: string;
-//     fontSize: number;
-//     font?: string;
-//     backgroundColor?: string;
-//     color?: string;
-// }
-
 export { StixBundle, StixObject, Stix2ObjectTypes}
