@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ForceGraph3D, ForceGraph2D } from 'react-force-graph';
-import { drawCurvedLine, formatData, loadIcons } from './utils';
+import { createLabel, drawCurvedLine, formatData, loadIcons } from './utils';
 import { GraphData, ILabelOptions, IStix2Visualizer, LinkObject, NodeObject } from '../stix2-visualizer';
 // import { IRelationLabelOptions } from './types';
 
@@ -1408,12 +1408,21 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         ...props.directionOptions
       },
       relationLabelOptions: {
-        fontSize: 4,
+        fontSize: 3 ,
         color: 'rgba(126,126,126, 0.9)',
-        display: true,
+        display: false,
+        onZoomOutDisplay: false,
         ...props.relationLabelOptions,
       },
+      nodeLabelOptions:{
+        fontSize: 4,
+        color: 'rgba(39, 37, 37, 0.9)',
+        display: true,
+        onZoomOutDisplay: false,
+        ...props.nodeLabelOptions,
+      },
       nodeOptions: {
+        size: 12,
         disableDefaultHoverBehavior: false,
         ...props.nodeOptions,
       }
@@ -1421,6 +1430,8 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     }
     const fgRef = useRef<any>();
     const graphData = formatData(sampleJsonData, 0.1);
+  const initialZoomRef  = useRef<number | null>(null); 
+  const ZOOM_OUT_THRESHOLD = 0.80; // Only trigger if zoom-out is more than 20%
 
     const handleClick = useCallback((node: NodeObject) => {
         // Aim at node from outside it
@@ -1436,6 +1447,52 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
             );
     }
     }, [fgRef]);
+
+    const handleZoom = ({ k }: { k: number; x: number; y: number }) => {
+    if (initialZoomRef.current === null) {
+      initialZoomRef.current = k; // store initial zoom on first call
+      return;
+    }
+    const initialZoom = initialZoomRef.current;
+    console.log(initialZoom, k)
+    if (k < initialZoom * ZOOM_OUT_THRESHOLD) {
+      if(properties.nodeLabelOptions?.onZoomOutDisplay === false){
+        properties.nodeLabelOptions.display = false;
+      }
+      if(properties.relationLabelOptions?.onZoomOutDisplay === false){
+        properties.relationLabelOptions.display = false;
+      }
+      // Call your custom function here
+    }
+    else {
+      if(properties.nodeLabelOptions?.onZoomOutDisplay === false && properties.nodeLabelOptions?.display === false){
+        properties.nodeLabelOptions.display = true;
+      }
+      if(properties.relationLabelOptions?.onZoomOutDisplay === false && properties.relationLabelOptions?.display === false){
+        properties.relationLabelOptions.display = true;
+      }
+    }
+    // const prevZoom = prevZoomRef.current;
+
+    // Detect significant zoom-out
+    // if (k < prevZoom && (prevZoom - k) >= ZOOM_OUT_THRESHOLD) {
+    //   if(properties.nodeLabelOptions?.onZoomOutDisplay === false){
+    //     properties.nodeLabelOptions.display = false;
+    //   }
+    //   if(properties.relationLabelOptions?.onZoomOutDisplay === false){
+    //     properties.relationLabelOptions.display = false;
+    //   }
+      
+    //   console.log('📉 Significant Zoom Out!');
+    //   // 🔁 Trigger your zoom-out function here
+    // }
+    // else{
+
+    // }
+
+    // Update previous zoom scale
+    // prevZoomRef.current = k;
+  };
 
     const gData = graphData; //dataSample; // genRandomTree(40); //dataSample; //
     console.log(gData);
@@ -1520,7 +1577,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
         ctx.fill();
       }, [hoverNode]);
-      console.log('AGAAAAAAAAAAIn')
+      // console.log('AGAAAAAAAAAAIn')
       return <ForceGraph2D
       nodeLabel="id"
       ref={fgRef}
@@ -1529,26 +1586,43 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       linkDirectionalArrowRelPos={properties.directionOptions?.arrowRelativePositions}
       linkCurvature={properties.relationOptions?.curvature}
       nodeCanvasObject={(node, ctx) => {
-        const size = 12;
+        const size = properties.nodeOptions?.size || 0;
         // console.log(node);
         if(node.x && node.y && node.img){
           console.log(node.img);
           ctx.drawImage(node.img, node.x - size / 2, node.y - size / 2, size, size);
-        }
-        const label = node.name;
-            const fontSize = 5;
-            ctx.font = `${fontSize}px Sans-Serif`;
-            const textWidth = ctx.measureText(node.label).width;
-            // const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
+       
+        
+        if(node.name && properties.nodeLabelOptions?.display){
+          
+        const labelOptions: ILabelOptions = {
+            fontSize: properties.nodeLabelOptions?.fontSize,
+            backgroundColor: properties.nodeLabelOptions?.backgroundColor,
+            color: properties.nodeLabelOptions?.color,
+            font: properties.nodeLabelOptions?.font,
+            display: properties.nodeLabelOptions?.display
+          } 
+        // const t = 0.5;
+        // const x = (1 - t) ** 2 * node.x + 2 * (1 - t) * t * node.fx + t ** 2 * to.x;
+        // const y = (1 - t) ** 2 * node.y + 2 * (1 - t) * t * node.cy + t ** 2 * to.y;
+        createLabel(node.name, ctx, labelOptions, node.x, node.y+(size / 2) + 5);
+     }
+    }
+        
+        // const label = node.name;
+        //     const fontSize = 5;
+        //     ctx.font = `${fontSize}px Sans-Serif`;
+        //     const textWidth = ctx.measureText(node.label).width;
+        //     // const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
 
-            // ctx.fillStyle = 'rgba(14, 13, 13, 0.8)';
-            // ctx.fillRect((node.x) || 0 - bckgDimensions[0] / 2, node.y || 0  - bckgDimensions[1] / 2, bckgDimensions[0],
-            // bckgDimensions[1]);
+        //     // ctx.fillStyle = 'rgba(14, 13, 13, 0.8)';
+        //     // ctx.fillRect((node.x) || 0 - bckgDimensions[0] / 2, node.y || 0  - bckgDimensions[1] / 2, bckgDimensions[0],
+        //     // bckgDimensions[1]);
 
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = node.color;
-            ctx.fillText(label?.toString() || 'Label Not Found!', node.x || 0, (node.y || 0)+10);
+        //     ctx.textAlign = 'center';
+        //     ctx.textBaseline = 'middle';
+        //     ctx.fillStyle = node.color;
+        //     ctx.fillText(label?.toString() || 'Label Not Found!', node.x || 0, (node.y || 0)+10);
       }}
       // nodePointerAreaPaint={(node, color, ctx) => {
       //   if(node.x && node.y){
@@ -1571,6 +1645,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
        */
       cooldownTicks={50}
       onEngineStop={() => fgRef.current.zoomToFit(400)}
+      onZoom={handleZoom}
       /**
        * Highlight Nodes and Edges
        */
@@ -1615,7 +1690,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         let labelOptions: ILabelOptions | undefined = undefined;
         if(link.label){
           labelOptions = {
-            label: link.label || properties.relationLabelOptions?.label,
             fontSize: properties.relationLabelOptions?.fontSize,
             backgroundColor: properties.relationLabelOptions?.backgroundColor,
             color: properties.relationLabelOptions?.color,
@@ -1636,6 +1710,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         properties.relationOptions?.curvature || 0,
         color,
         width as number,
+        link.label,
         labelOptions
       );
             // const fontSize = 12/link.globalScale;

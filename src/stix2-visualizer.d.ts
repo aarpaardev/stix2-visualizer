@@ -31,10 +31,10 @@ interface GraphData<NodeType = {}, LinkType = {}> {
 interface ILabelOptions {
   font?: string,
   fontSize?: number,
-  label?: string,
   backgroundColor?: string;
   color?: string;
   display?: boolean;
+  onZoomOutDisplay?: boolean;
 }
 
 interface ILinkDirectionOptions { 
@@ -58,6 +58,7 @@ interface ILinkOptions {
 
 interface INodeOptions {
   disableDefaultHoverBehavior?: boolean;
+  size?: number;
   onHover?: ((link: NodeObject | null) => void);
 }
 
