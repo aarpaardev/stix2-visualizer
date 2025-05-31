@@ -63,6 +63,7 @@ interface INodeOptions {
 }
 
 interface IStix2Visualizer {
+  data: JSON | StixBundle;
   nodeOptions?: INodeOptions;
   relationOptions?: ILinkOptions;
   directionOptions?: ILinkDirectionOptions;

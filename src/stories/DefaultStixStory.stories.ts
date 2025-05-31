@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Stix2Visualizer } from '../components/index';
+import APT1 from '../examples/apt1.json';
 
 const meta = {
   title: 'Example/Requirements',
@@ -16,9 +17,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const DefaultStix: Story = {
-  // args: {
-  //   relationOptions: {
-  //     distance: 120
-  //   }
-  // }
+  args: {
+    data: APT1
+    // relationOptions: {
+    //   distance: 120
+    // }
+  }
 };
