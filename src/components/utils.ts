@@ -43,6 +43,7 @@ export function drawCurvedLine(
   curvature: number,
   color: string,
   width: number,
+  label?: string,
   labelOptions?: ILabelOptions,
 ) {
   // Midpoint
@@ -73,12 +74,12 @@ export function drawCurvedLine(
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
   ctx.stroke();
-  if(labelOptions){
+  if(labelOptions && label){
     // Compute midpoint of curve using quadratic Bézier formula at t=0.5
     const t = 0.5;
     const x = (1 - t) ** 2 * from.x + 2 * (1 - t) * t * cx + t ** 2 * to.x;
     const y = (1 - t) ** 2 * from.y + 2 * (1 - t) * t * cy + t ** 2 * to.y;
-    createLabel(ctx, labelOptions, x, y);
+    createLabel(label, ctx, labelOptions, x, y);
   }
 
  
@@ -86,23 +87,22 @@ export function drawCurvedLine(
 
 /**
  * Create a curved line
+ * @param {string} label label to be displayed
  * @param {CanvasRenderingContext2D} ctx canvas object
- * @param {{ x: number; y: number }} from starting x-axis and y-axis position
- * @param {{ x: number; y: number }} to ending x-axis and y-axis position
- * @param {number} curvature curvature of the line
- * @param {string} color background color of the line
- * @param {number} width width of the line
  * @param {IRelationLabelOptions | undefined} labelOptions label to be displayed on the line
+ * @param {number} x starting x-axis and y-axis position
+ * @param {number} y ending x-axis and y-axis position
  * @returns {{ x: number; y: number }} from
  */
 export function createLabel(
+  label: string,
   ctx: CanvasRenderingContext2D,
   labelOptions: ILabelOptions,
   x: number,
   y:number
   
 ) { // Draw the curve
-  if (labelOptions.label && labelOptions.display) {
+  if (labelOptions.display) {
     const fontSzie = labelOptions.fontSize || 0;
     const font = labelOptions.font || 'sans-serif';
     const color = labelOptions.color || 'rgba(0, 0, 0, 0)';
@@ -110,7 +110,7 @@ export function createLabel(
     if(labelOptions.backgroundColor){
       ctx.fillStyle = labelOptions.backgroundColor; //'rgba(0, 0, 0, 0.6)';
       const padding = 4;
-      const textWidth = ctx.measureText(labelOptions.label).width;
+      const textWidth = ctx.measureText(label).width;
       ctx.fillRect(
         x - textWidth / 2 - padding,
         y - fontSzie,
@@ -123,7 +123,7 @@ export function createLabel(
     ctx.font = `${fontSzie}px ${font || 'sans-serif'}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(labelOptions.label, x, y);
+    ctx.fillText(label, x, y);
   }
 }
 
