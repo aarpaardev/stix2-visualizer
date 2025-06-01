@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ForceGraph2D } from 'react-force-graph';
-import ForceGraphInstance from 'force-graph';
 import { createLabel, formatData } from './utils';
 import { ILabelOptions, IStix2Visualizer, LinkObject, NodeObject } from '../stix2-visualizer';
-import { Coordinates } from './types';
+import { Coordinates, ReactForceRef, ZoomTransformation } from './types';
 
 /**
  * Only trigger if zoom-out is more than 20%
@@ -53,22 +52,8 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       ...props.nodeOptions,
     },
   };
-  type LinkForce = {
-    distance: (distance: number) => void;
-    // optionally add more methods like strength, iterations if needed
-  };
-  interface ForceGraphRef {
-    cameraPosition: (
-      position: { x: number; y: number; z: number },
-      lookAt?: NodeObject,
-      durationMs?: number
-    ) => { x: number; y: number; z: number };
-    zoom: (scale: number, duration?: number) => void;
-    zoomToFit: (duration?: number, padding?: number) => void;
-    d3Force: (name: 'link' | string) => LinkForce | undefined;
-    // Add more methods as needed
-  }
-  const fgRef = useRef<ForceGraphRef>();
+
+  const fgRef = useRef<ReactForceRef>();
   const initialZoomRef = useRef<number | null>(null);
 
   /**
@@ -93,15 +78,21 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     label?: string,
     labelOptions?: ILabelOptions
   ): void => {
-    // Midpoint
+    /**
+     * Calculate Midpoint
+     */
     const mx = (from.x + to.x) / 2;
     const my = (from.y + to.y) / 2;
 
-    // Vector from start to end
+    /**
+     * Calculate Vector from start to end
+     */
     const dx = to.x - from.x;
     const dy = to.y - from.y;
 
-    // Rotate 90 degrees and apply curvature
+    /**
+     * Rotate 90 degrees and apply curvature
+     */
     const cx = mx + curvature * dy;
     const cy = my - curvature * dx;
 
@@ -122,30 +113,12 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     }
   };
 
-  const handleClick = useCallback(
-    (node: NodeObject) => {
-      // Aim at node from outside it
-      if (node.x && node.y && node.z) {
-        const distance = 40;
-        const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-        fgRef.current?.cameraPosition(
-          { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
-          node, // lookAt ({ x, y, z })
-          3000 // ms transition duration
-        );
-      }
-    },
-    [fgRef]
-  );
-
   /**
-   *
-   * @param root0
-   * @param root0.k
-   * @param root0.x
-   * @param root0.y
+   * @param {ZoomTransformation} transform transformed coordinates
+   * @returns {void}
    */
-  const handleZoom = ({ k }: { k: number; x: number; y: number }) => {
+  const handleZoom = (transform: ZoomTransformation): void => {
+    const { k } = transform;
     if (initialZoomRef.current === null) {
       /**
        * store initial zoom on first call
@@ -177,6 +150,28 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       }
     }
   };
+
+  /**
+   * Handles the click event on a graph node.
+   * @param {NodeObject} node - The node object that was clicked.
+   * @returns {void}
+   */
+  const handleClick = useCallback(
+    (node: NodeObject): void => {
+      // Aim at node from outside it
+      if (node.x && node.y && node.z) {
+        const distance = 40;
+        const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+        fgRef.current?.cameraPosition(
+          { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
+          node, // lookAt ({ x, y, z })
+          3000 // ms transition duration
+        );
+      }
+    },
+    [fgRef]
+  );
+
   const transformedGraph = useMemo(() => {
     return formatData(properties.data, 0.1);
   }, [properties.data]);
@@ -201,9 +196,10 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
   // const [hoverNode, setHoverNode] = useState<NodeObject | null>(null);
 
   /**
-   *
+   * Updates the currently highlighted elements (e.g., nodes or links) in the graph.
+   * @returns {void}
    */
-  const updateHighlight = () => {
+  const updateHighlight = (): void => {
     setHighlightNodes(highlightNodes);
     setHighlightLinks(highlightLinks);
   };
@@ -222,10 +218,11 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
   // };
 
   /**
-   *
-   * @param link
+   * Handles the hover event for a link in the graph.
+   * @param {LinkObject | null} link - The link object being hovered over, or null if no link is hovered.
+   * @returns {void}
    */
-  const handleLinkHover = (link: LinkObject | null) => {
+  const handleLinkHover = (link: LinkObject | null): void => {
     highlightNodes.clear();
     highlightLinks.clear();
 
@@ -237,7 +234,14 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
 
     updateHighlight();
   };
-  const drawNode = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D) => {
+
+  /**
+   * Custom rendering function for drawing a node on the canvas.
+   * @param {NodeObject} link - The node object to be rendered.
+   * @param {CanvasRenderingContext2D} ctx - The 2D rendering context of the canvas.
+   * @returns {void}
+   */
+  const drawNode = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D): void => {
     const size = properties.nodeOptions?.size || 0;
     if (node.x && node.y && node.img) {
       ctx.drawImage(node.img, node.x - size / 2, node.y - size / 2, size, size);
@@ -255,7 +259,13 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     }
   }, []);
 
-  const drawLink = useCallback((link: LinkObject, ctx: CanvasRenderingContext2D) => {
+  /**
+   * Custom rendering function for drawing a link on the canvas.
+   * @param {LinkObject} link - The link object to be rendered.
+   * @param {CanvasRenderingContext2D} ctx - The 2D rendering context of the canvas.
+   * @returns {void}
+   */
+  const drawLink = useCallback((link: LinkObject, ctx: CanvasRenderingContext2D): void => {
     let labelOptions: ILabelOptions | undefined = undefined;
     if (link.label) {
       labelOptions = {
@@ -286,7 +296,12 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     );
   }, []);
 
-  const particleWidth = useCallback((link: LinkObject) => {
+  /**
+   * Computes the particle width for a given graph link.
+   * @param {LinkObject} link - The link object for which to calculate the particle width.
+   * @returns {number} The width of the particle to render on the link.
+   */
+  const particleWidth = useCallback((link: LinkObject): number => {
     if (highlightLinks.has(link)) {
       return 4;
     } else if (typeof properties.directionOptions?.directionalParticleWidth === 'number') {
@@ -297,7 +312,12 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     return 0;
   }, []);
 
-  const linkWidth = useCallback((link: LinkObject) => {
+  /**
+   * Computes the link width for a given graph link.
+   * @param {LinkObject} link - The link object for which to calculate the particle width.
+   * @returns {number} The width of the link to render on the link.
+   */
+  const linkWidth = useCallback((link: LinkObject): number => {
     if (!properties.relationOptions?.disableDefaultHoverBehavior && highlightLinks.has(link)) {
       return 5;
     } else if (typeof properties.relationOptions?.width === 'number') {
@@ -308,7 +328,12 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     return 0;
   }, []);
 
-  const directionAndParticleColor = useCallback((link: LinkObject) => {
+  /**
+   * Determines the particle and arrow color for a given graph link.
+   * @param {LinkObject} link - The link object.
+   * @returns {string} The color of moving particles and arrow.
+   */
+  const ArrowAndParticleColor = useCallback((link: LinkObject): string => {
     /**
      * Its a bug in this library, so if a string is provided
      * pass it to the function to make it work.
@@ -364,7 +389,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
        */
       cooldownTicks={50}
       onEngineStop={() => {
-        return fgRef.current.zoomToFit(400);
+        return fgRef.current?.zoomToFit(400);
       }}
       onZoom={handleZoom}
       /**
@@ -374,7 +399,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       linkWidth={linkWidth}
       linkDirectionalParticleWidth={particleWidth} // by default we are keeping 0.5 size for direction particles
       // linkLabel={properties.relationLabelOptions?.l} //not needed
-      linkColor={directionAndParticleColor}
+      linkColor={ArrowAndParticleColor}
       linkCanvasObject={drawLink}
       /**
        * Follwoing Highlighting features works only with 2D

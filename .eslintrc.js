@@ -80,7 +80,7 @@ module.exports = {
         '@typescript-eslint/explicit-module-boundary-types': 'warn',
         '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
         // Enforce consistent indentation
-        '@typescript-eslint/indent': ['error', 2],
+        '@typescript-eslint/indent': 'off',
 
         // A temporary hack related to IDE not resolving correct package.json
         'import/no-extraneous-dependencies': 'off',
@@ -190,7 +190,7 @@ module.exports = {
 
         // Node.js and CommonJS
         'callback-return': [1, ['callback', 'next']],
-        'global-require': 2,
+        'global-require': 'off',
         'handle-callback-err': 1,
         'no-mixed-requires': 1,
         'no-new-require': 2,
