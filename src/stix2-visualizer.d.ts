@@ -1,4 +1,6 @@
-type NodeObject<NodeType = {}> = NodeType & {
+import { StixBundle } from './components/types';
+
+type NodeObject<NodeType = object> = NodeType & {
   id: string | number;
   img?: HTMLImageElement;
   name?: string;
@@ -12,32 +14,32 @@ type NodeObject<NodeType = {}> = NodeType & {
   fx?: number;
   fy?: number;
   fz?: number;
-  [others: string]: any;
+  [others: string]: unknown;
 };
 
-type LinkObject<NodeType = {}, LinkType = {}> = LinkType & {
+type LinkObject<NodeType = object, LinkType = object> = LinkType & {
   source?: string | number | NodeObject<NodeType>;
   target?: string | number | NodeObject<NodeType>;
   color?: string;
   // width?: number;
-  [others: string]: any;
+  [others: string]: unknown;
 };
 
-interface GraphData<NodeType = {}, LinkType = {}> {
+interface GraphData<NodeType = object, LinkType = object> {
   nodes: NodeObject<NodeType>[];
   links: LinkObject<NodeType, LinkType>[];
 }
 
 interface ILabelOptions {
-  font?: string,
-  fontSize?: number,
+  font?: string;
+  fontSize?: number;
   backgroundColor?: string;
   color?: string;
   display?: boolean;
   onZoomOutDisplay?: boolean;
 }
 
-interface ILinkDirectionOptions { 
+interface ILinkDirectionOptions {
   arrowLength?: ((link: LinkObject) => number) | number;
   arrowRelativePositions?: ((link: LinkObject) => number) | number;
   directionalParticles?: ((link: LinkObject) => number) | number;
@@ -53,13 +55,13 @@ interface ILinkOptions {
   distance?: number;
   color?: string;
   disableDefaultHoverBehavior?: boolean;
-  onHover?: ((link: LinkObject | null) => void);
+  onHover?: (link: LinkObject | null) => void;
 }
 
 interface INodeOptions {
   disableDefaultHoverBehavior?: boolean;
   size?: number;
-  onHover?: ((link: NodeObject | null) => void);
+  onHover?: (link: NodeObject | null) => void;
 }
 
 interface IStix2Visualizer {
@@ -71,11 +73,4 @@ interface IStix2Visualizer {
   nodeLabelOptions?: ILabelOptions;
 }
 
-export {
-  NodeObject,
-  LinkObject,
-  ILinkOptions,
-  IStix2Visualizer,
-  GraphData,
-  ILabelOptions
-}
+export { NodeObject, LinkObject, ILinkOptions, IStix2Visualizer, GraphData, ILabelOptions };
