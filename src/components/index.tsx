@@ -34,6 +34,12 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     directionOptions: {
       directionSize: 4,
       arrowRelativePositions: 0.98,
+      /**
+       * If directionalParticles > 0 canvas
+       * will be made again and again due
+       * to particle movement. Can be verfied
+       * in drawNode callBack.
+       */
       directionalParticles: 10,
       directionalParticleSize: 1,
       directionalParticleSpeed: 0.005,
@@ -193,37 +199,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     [fgRef, properties.nodeOptions?.onClick]
   );
 
-  // /**
-  //  * Updates Node on hover during redraw phase.
-  //  * @param {NodeObject} node - The node object that was clicked.
-  //  * @param {CanvasRenderingContext} ctx - The node canvas context that was clicked.
-  //  * @returns {void}
-  //  */
-  // const updateNodeOnHover = useCallback(
-  //   (node: NodeObject, ctx: CanvasRenderingContext2D): void => {
-  //     // ctx.beginPath();
-  //     console.log('hoverNode', hoverNode);
-  //     if (node.x && node.y && node.id === hoverNode && node.img) {
-  //       ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
-  //       // console.log('Redrawing');
-  //       // ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
-  //       // ctx.fillStyle = 'red';
-  //       // ctx.fill();
-  //     }
-  //   },
-  //   [fgRef, hoverNode]
-  // );
-
-  //   (node: NodeObject, ctx: CanvasRenderingContext2D) => {
-  //     // add ring just for highlighted nodes
-  //     ctx.beginPath();
-  //     if (node.x && node.y) {
-  //       ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
-  //     }
-  //     ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
-  //     ctx.fill();
-  //   },
-
   /**
    * Handles the click event on a graph node.
    * @param {LinkObject} node - The node object that was clicked.
@@ -280,11 +255,11 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
   };
 
   /**
-   *
-   * @param node
+   * Updates hover objects in their states
+   * @param { NodeObject | null} node Node Object
+   * @returns {void}
    */
-  const handleNodeHover = (node: NodeObject | null) => {
-    console.log('Seeting hover', node?.id || null);
+  const handleNodeHover = (node: NodeObject | null): void => {
     highlightNodes.clear();
     highlightLinks.clear();
     if (node) {
@@ -326,7 +301,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
    */
   const drawNode = useCallback(
     (node: NodeObject, ctx: CanvasRenderingContext2D): void => {
-      // console.log(hoverNode, 'man');
       const size = properties.nodeOptions?.size || 0;
       if (node.x && node.y && node.img) {
         ctx.drawImage(node.img, node.x - size / 2, node.y - size / 2, size, size);
@@ -342,7 +316,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
           createLabel(node.name, ctx, labelOptions, node.x, node.y + size / 2 + 5);
         }
       }
-      // console.log('Redrawing0');
       if (properties.nodeOptions?.onHover && node.id === hoverNode) {
         properties.nodeOptions?.onHover(node, ctx);
       }
@@ -370,7 +343,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       }
       const color: string = link.color || properties.relationOptions?.color || '#0000';
       const width = link.width || properties.relationOptions?.width || 0;
-      console.log('width is', width);
       drawCurvedLine(
         ctx,
         {
@@ -432,19 +404,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     return '#00000';
   }, []);
 
-  // const paintRing = useCallback(
-  //   (node: NodeObject, ctx: CanvasRenderingContext2D) => {
-  //     // add ring just for highlighted nodes
-  //     ctx.beginPath();
-  //     if (node.x && node.y) {
-  //       ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
-  //     }
-  //     ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
-  //     ctx.fill();
-  //   },
-  //   [hoverNode]
-  // );
-  console.log('AGAAAAAAAAAAIn');
   return (
     <ForceGraph2D
       nodeLabel="id"
@@ -458,13 +417,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       linkDirectionalArrowRelPos={properties.directionOptions?.arrowRelativePositions}
       linkCurvature={properties.relationOptions?.curvature}
       nodeCanvasObject={drawNode}
-      // nodePointerAreaPaint={(node, color, ctx) => {
-      //   if(node.x && node.y){
-      //     const size = 12;
-      //     ctx.fillStyle = color;
-      //     ctx.fillRect(node.x - size / 2, node.y - size / 2, size, size); // draw square as pointer trap
-      // }
-      // }}
       /**
        * Focus on Node and Link
        */
@@ -502,7 +454,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
        */
       onNodeHover={handleNodeHover}
       onLinkHover={handleLinkHover}
-      // nodeThreeObject={}
     />
   );
 };
