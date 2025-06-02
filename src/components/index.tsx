@@ -127,7 +127,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       return;
     }
     const initialZoom = initialZoomRef.current;
-    console.log(initialZoom, k);
     if (k < initialZoom * ZOOM_OUT_THRESHOLD) {
       if (properties.nodeLabelOptions?.onZoomOutDisplay === false) {
         properties.nodeLabelOptions.display = false;
@@ -156,17 +155,14 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
    * @param {NodeObject} node - The node object that was clicked.
    * @returns {void}
    */
-  const handleClick = useCallback(
+  const handleNodeClick = useCallback(
     (node: NodeObject): void => {
       // Aim at node from outside it
-      if (node.x && node.y && node.z) {
-        const distance = 40;
-        const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-        fgRef.current?.cameraPosition(
-          { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
-          node, // lookAt ({ x, y, z })
-          3000 // ms transition duration
-        );
+      console.log('clicked');
+      console.log('ok', node);
+      if (node.x && node.y) {
+        fgRef.current?.centerAt(node.x, node.y, 1000); // center smoothly
+        fgRef.current?.zoom(3, 1000); // zoom smoothly
       }
     },
     [fgRef]
@@ -378,7 +374,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       /**
        * Focus on Node
        */
-      onNodeClick={handleClick}
+      onNodeClick={handleNodeClick}
       /**
        * Show Direction Particles
        */
