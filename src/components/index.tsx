@@ -168,6 +168,29 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     [fgRef]
   );
 
+  /**
+   * Handles the click event on a graph node.
+   * @param {LinkObject} node - The node object that was clicked.
+   * @returns {void}
+   */
+  const handleLinkClick = useCallback(
+    (link: LinkObject): void => {
+      const source = link.source as NodeObject;
+      const target = link.target as NodeObject;
+
+      // Ensure both nodes have coordinates
+      if (source.x && source.y && target.x && target.y) {
+        const midX = (source.x + target.x) / 2;
+        const midY = (source.y + target.y) / 2;
+
+        const zoomLevel = 2; // adjust zoom level as needed
+
+        fgRef.current?.centerAt(midX, midY, 1000);
+        fgRef.current?.zoom(zoomLevel, 1000);
+      }
+    },
+    [fgRef]
+  );
   const transformedGraph = useMemo(() => {
     return formatData(properties.data, 0.1);
   }, [properties.data]);
@@ -372,9 +395,10 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       // }
       // }}
       /**
-       * Focus on Node
+       * Focus on Node and Link
        */
       onNodeClick={handleNodeClick}
+      onLinkClick={handleLinkClick}
       /**
        * Show Direction Particles
        */
