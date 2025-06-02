@@ -14,6 +14,9 @@ type NodeObject<NodeType = object> = NodeType & {
   fx?: number;
   fy?: number;
   fz?: number;
+  neighbors?: Array<NodeObject>;
+  // eslint-disable-next-line no-use-before-define
+  links?: Array<LinkObject>;
   [others: string]: unknown;
 };
 
@@ -40,13 +43,16 @@ interface ILabelOptions {
 }
 
 interface ILinkDirectionOptions {
-  arrowLength?: ((link: LinkObject) => number) | number;
+  directionSize?: ((link: LinkObject) => number) | number;
   arrowRelativePositions?: ((link: LinkObject) => number) | number;
   directionalParticles?: ((link: LinkObject) => number) | number;
   directionalParticleSpeed?: ((link: LinkObject) => number) | number;
-  directionalParticleWidth?: ((link: LinkObject) => number) | number;
+  directionalParticleSize?: ((link: LinkObject) => number) | number;
   directionalParticlesAndArrowColor?: ((link: LinkObject) => string) | string;
-  displayDirections: boolean;
+  onHoverParticlesSize?: number;
+  onHoverArrowSize?: number;
+  displayDirections?: boolean;
+  displayParticles?: boolean;
 }
 
 interface ILinkOptions {
@@ -54,14 +60,16 @@ interface ILinkOptions {
   curvature?: number;
   distance?: number;
   color?: string;
-  disableDefaultHoverBehavior?: boolean;
-  onHover?: (link: LinkObject | null) => void;
+  disableZoomOnClick?: boolean;
+  onHover?: (link: LinkObject, ctx: CanvasRenderingContext2D) => void;
+  onClick?: (link: LinkObject) => void;
 }
 
 interface INodeOptions {
-  disableDefaultHoverBehavior?: boolean;
   size?: number;
-  onHover?: (link: NodeObject | null) => void;
+  disableZoomOnClick?: boolean;
+  onHover?: (node: NodeObject, ctx: CanvasRenderingContext2D) => void;
+  onClick?: (node: NodeObject) => void;
 }
 
 interface IStix2Visualizer {

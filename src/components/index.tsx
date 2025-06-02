@@ -16,20 +16,31 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
   const properties: IStix2Visualizer = {
     data: props.data,
     relationOptions: {
-      disableDefaultHoverBehavior: false,
+      width: 1,
       color: 'rgba(126,126,126, 0.6)',
       distance: 60,
       curvature: 0.25,
+      disableZoomOnClick: false,
+      /**
+       * @param {LinkObject} link link Object
+       * @param {CanvasRenderingContext2D} ctx node canvas context
+       */
+      onHover: (link: LinkObject, ctx: CanvasRenderingContext2D) => {
+        ctx.strokeStyle = 'rgba(36, 35, 35, 0.6)';
+        ctx.stroke();
+      },
       ...props.relationOptions,
     },
     directionOptions: {
-      arrowLength: 3.5,
-      arrowRelativePositions: 0.95,
+      directionSize: 4,
+      arrowRelativePositions: 0.98,
       directionalParticles: 10,
-      directionalParticleWidth: 1,
+      directionalParticleSize: 1,
       directionalParticleSpeed: 0.005,
       directionalParticlesAndArrowColor: 'rgba(0, 0, 0, 0, 0)',
       displayDirections: true,
+      displayParticles: true,
+      onHoverParticlesSize: 4,
       ...props.directionOptions,
     },
     relationLabelOptions: {
@@ -48,13 +59,26 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     },
     nodeOptions: {
       size: 12,
-      disableDefaultHoverBehavior: false,
+      disableZoomOnClick: false,
+      /**
+       *
+       * @param {NodeObject} node Node Object
+       * @param {CanvasRenderingContext2D} ctx node canvas context
+       */
+      onHover: (node: NodeObject, ctx: CanvasRenderingContext2D) => {
+        if (node.img && node.x && node.y) {
+          ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
+        }
+      },
       ...props.nodeOptions,
     },
   };
 
   const fgRef = useRef<ReactForceRef>();
   const initialZoomRef = useRef<number | null>(null);
+  const [highlightNodes, setHighlightNodes] = useState(new Set());
+  const [highlightLinks, setHighlightLinks] = useState(new Set());
+  const [hoverNode, setHoverNode] = useState<string | number | null>(null);
 
   /**
    * Create a curved line
@@ -158,15 +182,47 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
   const handleNodeClick = useCallback(
     (node: NodeObject): void => {
       // Aim at node from outside it
-      console.log('clicked');
-      console.log('ok', node);
-      if (node.x && node.y) {
+      if (!properties.nodeOptions?.disableZoomOnClick && node.x && node.y) {
         fgRef.current?.centerAt(node.x, node.y, 1000); // center smoothly
         fgRef.current?.zoom(3, 1000); // zoom smoothly
       }
+      if (properties.nodeOptions?.onClick) {
+        properties.nodeOptions.onClick(node);
+      }
     },
-    [fgRef]
+    [fgRef, properties.nodeOptions?.onClick]
   );
+
+  // /**
+  //  * Updates Node on hover during redraw phase.
+  //  * @param {NodeObject} node - The node object that was clicked.
+  //  * @param {CanvasRenderingContext} ctx - The node canvas context that was clicked.
+  //  * @returns {void}
+  //  */
+  // const updateNodeOnHover = useCallback(
+  //   (node: NodeObject, ctx: CanvasRenderingContext2D): void => {
+  //     // ctx.beginPath();
+  //     console.log('hoverNode', hoverNode);
+  //     if (node.x && node.y && node.id === hoverNode && node.img) {
+  //       ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
+  //       // console.log('Redrawing');
+  //       // ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
+  //       // ctx.fillStyle = 'red';
+  //       // ctx.fill();
+  //     }
+  //   },
+  //   [fgRef, hoverNode]
+  // );
+
+  //   (node: NodeObject, ctx: CanvasRenderingContext2D) => {
+  //     // add ring just for highlighted nodes
+  //     ctx.beginPath();
+  //     if (node.x && node.y) {
+  //       ctx.arc(node.x, node.y, NODE_R * 1.4, 0, 2 * Math.PI, false);
+  //     }
+  //     ctx.fillStyle = node === hoverNode ? 'red' : 'orange';
+  //     ctx.fill();
+  //   },
 
   /**
    * Handles the click event on a graph node.
@@ -175,26 +231,30 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
    */
   const handleLinkClick = useCallback(
     (link: LinkObject): void => {
-      const source = link.source as NodeObject;
-      const target = link.target as NodeObject;
+      if (!properties.relationOptions?.disableZoomOnClick) {
+        const source = link.source as NodeObject;
+        const target = link.target as NodeObject;
 
-      // Ensure both nodes have coordinates
-      if (source.x && source.y && target.x && target.y) {
-        const midX = (source.x + target.x) / 2;
-        const midY = (source.y + target.y) / 2;
+        // Ensure both nodes have coordinates
+        if (source.x && source.y && target.x && target.y) {
+          const midX = (source.x + target.x) / 2;
+          const midY = (source.y + target.y) / 2;
 
-        const zoomLevel = 2; // adjust zoom level as needed
+          const zoomLevel = 2; // adjust zoom level as needed
 
-        fgRef.current?.centerAt(midX, midY, 1000);
-        fgRef.current?.zoom(zoomLevel, 1000);
+          fgRef.current?.centerAt(midX, midY, 1000);
+          fgRef.current?.zoom(zoomLevel, 1000);
+        }
+      }
+      if (properties.relationOptions?.onClick) {
+        properties.relationOptions.onClick(link);
       }
     },
-    [fgRef]
+    [fgRef, properties.relationOptions?.onClick]
   );
   const transformedGraph = useMemo(() => {
     return formatData(properties.data, 0.1);
   }, [properties.data]);
-  const NODE_R = 8;
   useEffect(() => {
     const fg = fgRef.current;
     /**
@@ -210,10 +270,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     }
   }, [properties.relationOptions?.distance]);
 
-  const [highlightNodes, setHighlightNodes] = useState(new Set());
-  const [highlightLinks, setHighlightLinks] = useState(new Set());
-  // const [hoverNode, setHoverNode] = useState<NodeObject | null>(null);
-
   /**
    * Updates the currently highlighted elements (e.g., nodes or links) in the graph.
    * @returns {void}
@@ -223,18 +279,26 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     setHighlightLinks(highlightLinks);
   };
 
-  // const handleNodeHover = (node: NodeObject | null) => {
-  //   highlightNodes.clear();
-  //   highlightLinks.clear();
-  //   if (node) {
-  //     highlightNodes.add(node);
-  //     node?.neighbors?.forEach((neighbor: unknown) => highlightNodes.add(neighbor));
-  //     node?.links?.forEach((link: unknown) => highlightLinks.add(link));
-  //   }
-
-  //   setHoverNode(node || null);
-  //   updateHighlight();
-  // };
+  /**
+   *
+   * @param node
+   */
+  const handleNodeHover = (node: NodeObject | null) => {
+    console.log('Seeting hover', node?.id || null);
+    highlightNodes.clear();
+    highlightLinks.clear();
+    if (node) {
+      highlightNodes.add(node);
+      node?.neighbors?.forEach((neighbor: NodeObject) => {
+        return highlightNodes.add(neighbor);
+      });
+      node?.links?.forEach((link: LinkObject) => {
+        return highlightLinks.add(link);
+      });
+    }
+    setHoverNode(node?.id || null);
+    updateHighlight();
+  };
 
   /**
    * Handles the hover event for a link in the graph.
@@ -260,23 +324,31 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
    * @param {CanvasRenderingContext2D} ctx - The 2D rendering context of the canvas.
    * @returns {void}
    */
-  const drawNode = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D): void => {
-    const size = properties.nodeOptions?.size || 0;
-    if (node.x && node.y && node.img) {
-      ctx.drawImage(node.img, node.x - size / 2, node.y - size / 2, size, size);
+  const drawNode = useCallback(
+    (node: NodeObject, ctx: CanvasRenderingContext2D): void => {
+      // console.log(hoverNode, 'man');
+      const size = properties.nodeOptions?.size || 0;
+      if (node.x && node.y && node.img) {
+        ctx.drawImage(node.img, node.x - size / 2, node.y - size / 2, size, size);
 
-      if (node.name && properties.nodeLabelOptions?.display) {
-        const labelOptions: ILabelOptions = {
-          fontSize: properties.nodeLabelOptions?.fontSize,
-          backgroundColor: properties.nodeLabelOptions?.backgroundColor,
-          color: properties.nodeLabelOptions?.color,
-          font: properties.nodeLabelOptions?.font,
-          display: properties.nodeLabelOptions?.display,
-        };
-        createLabel(node.name, ctx, labelOptions, node.x, node.y + size / 2 + 5);
+        if (node.name && properties.nodeLabelOptions?.display) {
+          const labelOptions: ILabelOptions = {
+            fontSize: properties.nodeLabelOptions?.fontSize,
+            backgroundColor: properties.nodeLabelOptions?.backgroundColor,
+            color: properties.nodeLabelOptions?.color,
+            font: properties.nodeLabelOptions?.font,
+            display: properties.nodeLabelOptions?.display,
+          };
+          createLabel(node.name, ctx, labelOptions, node.x, node.y + size / 2 + 5);
+        }
       }
-    }
-  }, []);
+      // console.log('Redrawing0');
+      if (properties.nodeOptions?.onHover && node.id === hoverNode) {
+        properties.nodeOptions?.onHover(node, ctx);
+      }
+    },
+    [hoverNode]
+  );
 
   /**
    * Custom rendering function for drawing a link on the canvas.
@@ -284,68 +356,63 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
    * @param {CanvasRenderingContext2D} ctx - The 2D rendering context of the canvas.
    * @returns {void}
    */
-  const drawLink = useCallback((link: LinkObject, ctx: CanvasRenderingContext2D): void => {
-    let labelOptions: ILabelOptions | undefined = undefined;
-    if (link.label) {
-      labelOptions = {
-        fontSize: properties.relationLabelOptions?.fontSize,
-        backgroundColor: properties.relationLabelOptions?.backgroundColor,
-        color: properties.relationLabelOptions?.color,
-        font: properties.relationLabelOptions?.font,
-        display: properties.relationLabelOptions?.display,
-      };
-    }
-    const color: string = link.color || properties.relationOptions?.color || '#0000';
-    const width = link.width || typeof properties.relationOptions?.width || 0;
-    drawCurvedLine(
-      ctx,
-      {
-        x: (link.source as NodeObject)?.x || 0,
-        y: (link.source as NodeObject)?.y || 0,
-      },
-      {
-        x: (link.target as NodeObject)?.x || 0,
-        y: (link.target as NodeObject)?.y || 0,
-      },
-      properties.relationOptions?.curvature || 0,
-      color,
-      width as number,
-      link.labela as string,
-      labelOptions
-    );
-  }, []);
+  const drawLink = useCallback(
+    (link: LinkObject, ctx: CanvasRenderingContext2D): void => {
+      let labelOptions: ILabelOptions | undefined = undefined;
+      if (link.label) {
+        labelOptions = {
+          fontSize: properties.relationLabelOptions?.fontSize,
+          backgroundColor: properties.relationLabelOptions?.backgroundColor,
+          color: properties.relationLabelOptions?.color,
+          font: properties.relationLabelOptions?.font,
+          display: properties.relationLabelOptions?.display,
+        };
+      }
+      const color: string = link.color || properties.relationOptions?.color || '#0000';
+      const width = link.width || properties.relationOptions?.width || 0;
+      console.log('width is', width);
+      drawCurvedLine(
+        ctx,
+        {
+          x: (link.source as NodeObject)?.x || 0,
+          y: (link.source as NodeObject)?.y || 0,
+        },
+        {
+          x: (link.target as NodeObject)?.x || 0,
+          y: (link.target as NodeObject)?.y || 0,
+        },
+        properties.relationOptions?.curvature || 0,
+        color,
+        width as number,
+        link.label as string,
+        labelOptions
+      );
+
+      if (properties.relationOptions?.onHover && highlightLinks.has(link)) {
+        properties.relationOptions.onHover(link, ctx);
+      }
+    },
+    [fgRef]
+  );
 
   /**
    * Computes the particle width for a given graph link.
    * @param {LinkObject} link - The link object for which to calculate the particle width.
    * @returns {number} The width of the particle to render on the link.
    */
-  const particleWidth = useCallback((link: LinkObject): number => {
-    if (highlightLinks.has(link)) {
-      return 4;
-    } else if (typeof properties.directionOptions?.directionalParticleWidth === 'number') {
-      return properties.directionOptions?.directionalParticleWidth;
-    } else if (properties.directionOptions?.directionalParticleWidth) {
-      properties.directionOptions?.directionalParticleWidth(link);
-    }
-    return 0;
-  }, []);
-
-  /**
-   * Computes the link width for a given graph link.
-   * @param {LinkObject} link - The link object for which to calculate the particle width.
-   * @returns {number} The width of the link to render on the link.
-   */
-  const linkWidth = useCallback((link: LinkObject): number => {
-    if (!properties.relationOptions?.disableDefaultHoverBehavior && highlightLinks.has(link)) {
-      return 5;
-    } else if (typeof properties.relationOptions?.width === 'number') {
-      return properties.relationOptions?.width;
-    } else if (properties.relationOptions?.width) {
-      properties.relationOptions?.width(link);
-    }
-    return 0;
-  }, []);
+  const particleWidth = useCallback(
+    (link: LinkObject): number => {
+      if (highlightLinks.has(link)) {
+        return properties.directionOptions?.onHoverParticlesSize || 0;
+      } else if (typeof properties.directionOptions?.directionalParticleSize === 'number') {
+        return properties.directionOptions?.directionalParticleSize;
+      } else if (properties.directionOptions?.directionalParticleSize) {
+        properties.directionOptions?.directionalParticleSize(link);
+      }
+      return 0;
+    },
+    [fgRef]
+  );
 
   /**
    * Determines the particle and arrow color for a given graph link.
@@ -383,7 +450,11 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       nodeLabel="id"
       ref={fgRef}
       graphData={transformedGraph}
-      linkDirectionalArrowLength={properties.directionOptions?.arrowLength}
+      linkDirectionalArrowLength={
+        properties.directionOptions?.displayDirections
+          ? properties.directionOptions?.directionSize
+          : 0
+      }
       linkDirectionalArrowRelPos={properties.directionOptions?.arrowRelativePositions}
       linkCurvature={properties.relationOptions?.curvature}
       nodeCanvasObject={drawNode}
@@ -415,9 +486,10 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       /**
        * Highlight Nodes and Edges
        */
-      nodeRelSize={NODE_R}
-      linkWidth={linkWidth}
-      linkDirectionalParticleWidth={particleWidth} // by default we are keeping 0.5 size for direction particles
+      nodeRelSize={properties.nodeOptions?.size}
+      linkDirectionalParticleWidth={
+        properties.directionOptions?.displayParticles ? particleWidth : undefined
+      }
       // linkLabel={properties.relationLabelOptions?.l} //not needed
       linkColor={ArrowAndParticleColor}
       linkCanvasObject={drawLink}
@@ -428,7 +500,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
        * nodeCanvasObjectMode={(node: NodeObject) => highlightNodes.has(node) ? 'before' : undefined}
        * nodeCanvasObject={paintRing}
        */
-      // onNodeHover={handleNodeHover}
+      onNodeHover={handleNodeHover}
       onLinkHover={handleLinkHover}
       // nodeThreeObject={}
     />
