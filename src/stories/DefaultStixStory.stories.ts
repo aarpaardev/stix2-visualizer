@@ -18,9 +18,9 @@ type Story = StoryObj<typeof meta>;
 
 export const DefaultStix: Story = {
   args: {
-    data: APT1
+    data: APT1,
     // relationOptions: {
     //   distance: 120
     // }
-  }
+  },
 };
