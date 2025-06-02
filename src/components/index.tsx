@@ -8,6 +8,8 @@ import { Coordinates, ReactForceRef, ZoomTransformation } from './types';
  * Only trigger if zoom-out is more than 20%
  */
 const ZOOM_OUT_THRESHOLD = 0.8;
+const DEFAULT_ZOOM_LEVEL = 3;
+
 /**
  * @param {IStix2Visualizer} props properties
  * @returns {React.FC} Stix Visualizer Component
@@ -190,7 +192,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       // Aim at node from outside it
       if (!properties.nodeOptions?.disableZoomOnClick && node.x && node.y) {
         fgRef.current?.centerAt(node.x, node.y, 1000); // center smoothly
-        fgRef.current?.zoom(3, 1000); // zoom smoothly
+        fgRef.current?.zoom(DEFAULT_ZOOM_LEVEL, 1000); // zoom smoothly
       }
       if (properties.nodeOptions?.onClick) {
         properties.nodeOptions.onClick(node);
@@ -215,10 +217,8 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
           const midX = (source.x + target.x) / 2;
           const midY = (source.y + target.y) / 2;
 
-          const zoomLevel = 2; // adjust zoom level as needed
-
           fgRef.current?.centerAt(midX, midY, 1000);
-          fgRef.current?.zoom(zoomLevel, 1000);
+          fgRef.current?.zoom(DEFAULT_ZOOM_LEVEL, 1000);
         }
       }
       if (properties.relationOptions?.onClick) {
