@@ -1,17 +1,14 @@
 import React from 'react';
 import { Stix2Visualizer } from '../components';
-
-interface DefaultStixVisualizerProps {
-  data: object;
-}
+import { Stix2VisualizerProps } from '../stix2-visualizer';
 
 /**
  *
- * @param {DefaultStixVisualizerProps} props Default story props
+ * @param {Stix2VisualizerProps} props Default story props
  * @returns {React.FC} Stix Visualizer Component
  */
-export const DefaultStixVisualizer: React.FC<DefaultStixVisualizerProps> = (
-  props: DefaultStixVisualizerProps
+export const DefaultStix2Visualizer: React.FC<Stix2VisualizerProps> = (
+  props: Stix2VisualizerProps
 ) => {
   return (
     <div>

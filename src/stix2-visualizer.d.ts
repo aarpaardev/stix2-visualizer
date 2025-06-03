@@ -7,6 +7,7 @@ type ZoomTransformation = { k: number; x: number; y: number };
 type NodeObject<NodeType = object> = NodeType & {
   id: string | number;
   img?: HTMLImageElement;
+  size?: number;
   name?: string;
   val?: number;
   x?: number;
@@ -123,16 +124,20 @@ interface ILinkOptions {
 interface INodeOptions {
   size?: number;
   disableZoomOnClick?: boolean;
-  onHover?: (node: NodeObject, ctx: CanvasRenderingContext2D) => void;
+  onHover?: (
+    node: NodeObject,
+    ctx: CanvasRenderingContext2D,
+    highlightedNeighbors: Set<NodeObject>
+  ) => void;
   onClick?: (node: NodeObject, ref?: ReactForceRef) => void;
 }
 
-interface IStix2Visualizer {
+interface Stix2VisualizerProps {
   data: StixBundle | object;
   nodeOptions?: INodeOptions;
-  relationOptions?: ILinkOptions;
+  linkOptions?: ILinkOptions;
   directionOptions?: ILinkDirectionOptions;
-  relationLabelOptions?: ILabelOptions;
+  linkLabelOptions?: ILabelOptions;
   nodeLabelOptions?: ILabelOptions;
 }
 
@@ -140,7 +145,7 @@ export {
   NodeObject,
   LinkObject,
   ILinkOptions,
-  IStix2Visualizer,
+  Stix2VisualizerProps,
   GraphData,
   ILabelOptions,
   StixBundle,
