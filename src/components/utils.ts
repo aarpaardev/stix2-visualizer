@@ -1,5 +1,5 @@
-import { GraphData, ILabelOptions } from '../stix2-visualizer';
-import { Stix2ObjectTypes, StixBundle, StixObject } from './types';
+import type { GraphData, ILabelOptions, StixBundle, StixObject } from '../stix2-visualizer';
+import { Stix2ObjectTypes } from './types';
 
 /**
  * Create image element from image files.
@@ -95,7 +95,7 @@ export const objectExists = (objectId: string, objects: Array<StixObject>): bool
  * @returns {GraphData} transformed dorce-graph data
  */
 export const formatData = (
-  data: Record<string, unknown> | JSON,
+  data: Record<string, unknown> | object | StixBundle,
   nodeWidth: number,
   showNodeLabel = true,
   showLinkLabel = true,
