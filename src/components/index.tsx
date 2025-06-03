@@ -1,8 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ForceGraph2D } from 'react-force-graph';
 import { createLabel, formatData } from './utils';
-import { ILabelOptions, IStix2Visualizer, LinkObject, NodeObject } from '../stix2-visualizer';
-import { Coordinates, ReactForceRef, ZoomTransformation } from './types';
+import {
+  ILabelOptions,
+  IStix2Visualizer,
+  LinkObject,
+  NodeObject,
+  Coordinates,
+  ReactForceRef,
+  ZoomTransformation,
+} from '../stix2-visualizer';
 
 /**
  * Only trigger if zoom-out is more than 20%
@@ -82,11 +89,11 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     },
   };
 
-  const fgRef = useRef<ReactForceRef>();
   const initialZoomRef = useRef<number | null>(null);
   const [highlightNodes, setHighlightNodes] = useState(new Set());
   const [highlightLinks, setHighlightLinks] = useState(new Set());
   const [hoverNode, setHoverNode] = useState<string | number | null>(null);
+  const fgRef = useRef<ReactForceRef>();
 
   /**
    * Create a curved line
@@ -195,7 +202,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         fgRef.current?.zoom(DEFAULT_ZOOM_LEVEL, 1000); // zoom smoothly
       }
       if (properties.nodeOptions?.onClick) {
-        properties.nodeOptions.onClick(node);
+        properties.nodeOptions.onClick(node, fgRef.current);
       }
     },
     [fgRef, properties.nodeOptions?.onClick]
@@ -222,7 +229,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         }
       }
       if (properties.relationOptions?.onClick) {
-        properties.relationOptions.onClick(link);
+        properties.relationOptions.onClick(link, fgRef.current);
       }
     },
     [fgRef, properties.relationOptions?.onClick]
@@ -406,7 +413,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
 
   return (
     <ForceGraph2D
-      nodeLabel="id"
       ref={fgRef}
       graphData={transformedGraph}
       linkDirectionalArrowLength={
