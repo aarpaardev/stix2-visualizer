@@ -34,7 +34,6 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
        * @param {Set<NodeObject>} neighbors node canvas context
        */
       onHover: (node: NodeObject, ctx: CanvasRenderingContext2D, neighbors: Set<NodeObject>) => {
-        console.log(node);
         Array.from(neighbors.values()).forEach((neighbor: NodeObject) => {
           // neighbor.size = 50;
 
@@ -44,7 +43,11 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
            * @param x
            * @param y
            */
-          neighbor.drawHighlight = (neighCtx: CanvasRenderingContext2D, x: number, y: number) => {
+          neighbor.drawHighlight = (
+            neighCtx: CanvasRenderingContext2D,
+            x: number,
+            y: number
+          ): void => {
             neighCtx.beginPath();
             neighCtx.arc(x, y, 10, 0, Math.PI * 2); // full circle
             neighCtx.fillStyle = 'rgba(182, 181, 181, 0.5)';
@@ -69,9 +72,32 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
        * @param {CanvasRenderingContext2D} ctx node canvas context
        */
       onHover: (link: LinkObject, ctx: CanvasRenderingContext2D) => {
-        console.log(link);
         ctx.strokeStyle = 'rgba(36, 35, 35, 0.6)';
         ctx.stroke();
+        /**
+         *
+         * @param neighCtx
+         * @param x
+         * @param y
+         */
+        const drawHighlightFunc = (
+          neighCtx: CanvasRenderingContext2D,
+          x: number,
+          y: number
+        ): void => {
+          neighCtx.beginPath();
+          neighCtx.arc(x, y, 10, 0, Math.PI * 2); // full circle
+          neighCtx.fillStyle = 'rgba(182, 181, 181, 0.5)';
+          neighCtx.fill();
+          neighCtx.stroke();
+        };
+
+        if (link.source) {
+          (link.source as NodeObject).drawHighlight = drawHighlightFunc;
+        }
+        if (link.target) {
+          (link.target as NodeObject).drawHighlight = drawHighlightFunc;
+        }
       },
       ...props.linkOptions,
     },
@@ -294,7 +320,6 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
     highlightLinks.clear();
     if (node) {
       highlightNodes.add(node);
-      console.log('neighbors', node?.neighbors);
       node?.neighbors?.forEach((neighbor: NodeObject) => {
         return highlightNodes.add(neighbor);
       });
@@ -304,6 +329,7 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
     }
     setHoverNode(node?.id || null);
     updateHighlight();
+    console.log(highlightNodes);
   };
 
   /**
@@ -318,8 +344,8 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
     if (link) {
       highlightLinks.add(link);
       console.log('checkkkkk', link);
-      // highlightNodes.add(link.source);
-      // highlightNodes.add(link.target);
+      highlightNodes.add(link.source as NodeObject);
+      highlightNodes.add(link.target as NodeObject);
     }
 
     updateHighlight();
@@ -358,12 +384,8 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
           createLabel(node.name, ctx, labelOptions, node.x, node.y + size / 2 + 5);
         }
       }
-      if (properties.nodeOptions?.onHover) {
-        if (node.id === hoverNode) {
-          properties.nodeOptions?.onHover(node, ctx, highlightNodes as Set<NodeObject>);
-        } else if (hoverNode === null) {
-          console.log('Hover Finsihed');
-        }
+      if (properties.nodeOptions?.onHover && node.id === hoverNode) {
+        properties.nodeOptions?.onHover(node, ctx, highlightNodes as Set<NodeObject>);
       }
     },
     [hoverNode]
