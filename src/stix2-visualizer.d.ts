@@ -19,6 +19,8 @@ type NodeObject<NodeType = object> = NodeType & {
   fx?: number;
   fy?: number;
   fz?: number;
+  draw?: (ctx: CanvasRenderingContext2D, x: number, y: number) => void;
+  drawHighlight?: (ctx: CanvasRenderingContext2D, x: number, y: number) => void;
   neighbors?: Array<NodeObject>;
   // eslint-disable-next-line no-use-before-define
   links?: Array<LinkObject>;
