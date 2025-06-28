@@ -7,7 +7,7 @@ import { Stix2VisualizerProps } from '../stix2-visualizer';
  * @param {Stix2VisualizerProps} props Default story props
  * @returns {React.FC} Stix Visualizer Component
  */
-export const DefaultStix2Visualizer: React.FC<Stix2VisualizerProps> = (
+export const Stix2HighlightNeighbors: React.FC<Stix2VisualizerProps> = (
   props: Stix2VisualizerProps
 ) => {
   return (

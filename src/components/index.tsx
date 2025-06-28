@@ -34,9 +34,26 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
        * @param {Set<NodeObject>} neighbors node canvas context
        */
       onHover: (node: NodeObject, ctx: CanvasRenderingContext2D, neighbors: Set<NodeObject>) => {
-        console.log(node);
         Array.from(neighbors.values()).forEach((neighbor: NodeObject) => {
-          neighbor.size = 50;
+          // neighbor.size = 50;
+
+          /**
+           *
+           * @param neighCtx
+           * @param x
+           * @param y
+           */
+          neighbor.drawHighlight = (
+            neighCtx: CanvasRenderingContext2D,
+            x: number,
+            y: number
+          ): void => {
+            neighCtx.beginPath();
+            neighCtx.arc(x, y, 10, 0, Math.PI * 2); // full circle
+            neighCtx.fillStyle = 'rgba(182, 181, 181, 0.5)';
+            neighCtx.fill();
+            neighCtx.stroke();
+          };
         });
         if (node.img && node.x && node.y) {
           ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
@@ -55,9 +72,32 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
        * @param {CanvasRenderingContext2D} ctx node canvas context
        */
       onHover: (link: LinkObject, ctx: CanvasRenderingContext2D) => {
-        console.log(link);
         ctx.strokeStyle = 'rgba(36, 35, 35, 0.6)';
         ctx.stroke();
+        /**
+         *
+         * @param neighCtx
+         * @param x
+         * @param y
+         */
+        const drawHighlightFunc = (
+          neighCtx: CanvasRenderingContext2D,
+          x: number,
+          y: number
+        ): void => {
+          neighCtx.beginPath();
+          neighCtx.arc(x, y, 10, 0, Math.PI * 2); // full circle
+          neighCtx.fillStyle = 'rgba(182, 181, 181, 0.5)';
+          neighCtx.fill();
+          neighCtx.stroke();
+        };
+
+        if (link.source) {
+          (link.source as NodeObject).drawHighlight = drawHighlightFunc;
+        }
+        if (link.target) {
+          (link.target as NodeObject).drawHighlight = drawHighlightFunc;
+        }
       },
       ...props.linkOptions,
     },
@@ -96,8 +136,8 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
   };
 
   const initialZoomRef = useRef<number | null>(null);
-  const [highlightNodes, setHighlightNodes] = useState(new Set());
-  const [highlightLinks, setHighlightLinks] = useState(new Set());
+  const [highlightNodes, setHighlightNodes] = useState(new Set<NodeObject>());
+  const [highlightLinks, setHighlightLinks] = useState(new Set<LinkObject>());
   const [hoverNode, setHoverNode] = useState<string | number | null>(null);
   const fgRef = useRef<ReactForceRef>();
 
@@ -280,7 +320,6 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
     highlightLinks.clear();
     if (node) {
       highlightNodes.add(node);
-      console.log('neighbors', node?.neighbors);
       node?.neighbors?.forEach((neighbor: NodeObject) => {
         return highlightNodes.add(neighbor);
       });
@@ -290,6 +329,7 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
     }
     setHoverNode(node?.id || null);
     updateHighlight();
+    console.log(highlightNodes);
   };
 
   /**
@@ -303,8 +343,9 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
 
     if (link) {
       highlightLinks.add(link);
-      highlightNodes.add(link.source);
-      highlightNodes.add(link.target);
+      console.log('checkkkkk', link);
+      highlightNodes.add(link.source as NodeObject);
+      highlightNodes.add(link.target as NodeObject);
     }
 
     updateHighlight();
@@ -321,7 +362,17 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
       const size = Number(node.size) || properties.nodeOptions?.size || 0;
       if (node.x && node.y && node.img) {
         ctx.drawImage(node.img, node.x - size / 2, node.y - size / 2, size, size);
-
+        if (node.drawHighlight) {
+          if (highlightNodes.size > 0) {
+            node.drawHighlight(ctx, node.x, node.y);
+          } else {
+            /**
+             * clear draw when hover is removed.
+             */
+            node.drawHighlight = undefined;
+          }
+        }
+        node.draw?.(ctx, node.x, node.y);
         if (node.name && properties.nodeLabelOptions?.display) {
           const labelOptions: ILabelOptions = {
             fontSize: properties.nodeLabelOptions?.fontSize,
