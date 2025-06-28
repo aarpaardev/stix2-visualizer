@@ -1,4 +1,11 @@
-import type { GraphData, ILabelOptions, StixBundle, StixObject } from '../stix2-visualizer';
+import type {
+  GraphData,
+  ILabelOptions,
+  LinkObject,
+  NodeObject,
+  StixBundle,
+  StixObject,
+} from '../stix2-visualizer';
 import { Stix2ObjectTypes } from './types';
 
 /**
@@ -86,6 +93,32 @@ export const objectExists = (objectId: string, objects: Array<StixObject>): bool
 };
 
 /**
+ * Cross reference nodes and links
+ * @param {LinkObject} link link object
+ * @param {Array<NodeObject>} nodes node objects
+ * @returns {void}
+ */
+export const crossLink = (link: LinkObject, nodes: Record<string, NodeObject>): void => {
+  if (link.source && link.target) {
+    const a = nodes[link.source as string];
+    const b = nodes[link.target as string];
+    // eslint-disable-next-line no-unused-expressions
+    !a.neighbors && (a.neighbors = []);
+    // eslint-disable-next-line no-unused-expressions
+    !b.neighbors && (b.neighbors = []);
+    a.neighbors.push(b);
+    b.neighbors.push(a);
+
+    // eslint-disable-next-line no-unused-expressions
+    !a.links && (a.links = []);
+    // eslint-disable-next-line no-unused-expressions
+    !b.links && (b.links = []);
+    a.links.push(link);
+    b.links.push(link);
+  }
+};
+
+/**
  * Transform stix data into graph data.
  * @param {Record<string, unknown> | JSON} data Stix2 object name
  * @param {number} nodeWidth Node width
@@ -102,6 +135,7 @@ export const formatData = (
   iconShape: 'round' = 'round'
 ): GraphData => {
   const graphData: GraphData = { links: [], nodes: [] };
+  const nodes: Record<string, NodeObject> = {};
   const stixBundle = data as StixBundle;
   if (stixBundle && stixBundle.objects) {
     const icons = loadIcons(iconShape);
@@ -110,7 +144,7 @@ export const formatData = (
         if (object.type === Stix2ObjectTypes.Relationship) {
           /**
            * Make sure the node exists, for which
-           * a relation has already been created.
+           * a link has already been created.
            */
           if (
             object.source_ref &&
@@ -127,12 +161,18 @@ export const formatData = (
           }
         } else {
           if (object.id) {
-            graphData.nodes.push({
+            nodes[object.id] = {
               id: object.id,
               name: showNodeLabel ? (object.name ?? object.type) : undefined,
               img: icons[object.type] ?? icons[Stix2ObjectTypes.CustomObject],
               val: nodeWidth,
-            });
+            };
+            // graphData.nodes.push({
+            //   id: object.id,
+            //   name: showNodeLabel ? (object.name ?? object.type) : undefined,
+            //   img: icons[object.type] ?? icons[Stix2ObjectTypes.CustomObject],
+            //   val: nodeWidth,
+            // });
           }
           /**
            * Also add marking definition as relation.
@@ -156,5 +196,9 @@ export const formatData = (
       }
     });
   }
+  graphData.links.forEach((link) => {
+    crossLink(link, nodes);
+  });
+  graphData.nodes = Object.values(nodes);
   return graphData;
 };

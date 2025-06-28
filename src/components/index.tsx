@@ -3,7 +3,7 @@ import { ForceGraph2D } from 'react-force-graph';
 import { createLabel, formatData } from './utils';
 import {
   ILabelOptions,
-  IStix2Visualizer,
+  Stix2VisualizerProps,
   LinkObject,
   NodeObject,
   Coordinates,
@@ -18,13 +18,33 @@ const ZOOM_OUT_THRESHOLD = 0.8;
 const DEFAULT_ZOOM_LEVEL = 3;
 
 /**
- * @param {IStix2Visualizer} props properties
+ * @param {Stix2VisualizerProps} props properties
  * @returns {React.FC} Stix Visualizer Component
  */
-export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
-  const properties: IStix2Visualizer = {
+export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
+  const properties: Stix2VisualizerProps = {
     data: props.data,
-    relationOptions: {
+    nodeOptions: {
+      size: 12,
+      disableZoomOnClick: false,
+      /**
+       *
+       * @param {NodeObject} node Node Object
+       * @param {CanvasRenderingContext2D} ctx node canvas context
+       * @param {Set<NodeObject>} neighbors node canvas context
+       */
+      onHover: (node: NodeObject, ctx: CanvasRenderingContext2D, neighbors: Set<NodeObject>) => {
+        console.log(node);
+        Array.from(neighbors.values()).forEach((neighbor: NodeObject) => {
+          neighbor.size = 50;
+        });
+        if (node.img && node.x && node.y) {
+          ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
+        }
+      },
+      ...props.nodeOptions,
+    },
+    linkOptions: {
       width: 1,
       color: 'rgba(126,126,126, 0.6)',
       distance: 60,
@@ -35,10 +55,25 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
        * @param {CanvasRenderingContext2D} ctx node canvas context
        */
       onHover: (link: LinkObject, ctx: CanvasRenderingContext2D) => {
+        console.log(link);
         ctx.strokeStyle = 'rgba(36, 35, 35, 0.6)';
         ctx.stroke();
       },
-      ...props.relationOptions,
+      ...props.linkOptions,
+    },
+    nodeLabelOptions: {
+      fontSize: 4,
+      color: 'rgba(39, 37, 37, 0.9)',
+      display: true,
+      onZoomOutDisplay: false,
+      ...props.nodeLabelOptions,
+    },
+    linkLabelOptions: {
+      fontSize: 3,
+      color: 'rgba(126,126,126, 0.9)',
+      display: false,
+      onZoomOutDisplay: false,
+      ...props.linkLabelOptions,
     },
     directionOptions: {
       directionSize: 4,
@@ -57,35 +92,6 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       displayParticles: true,
       onHoverParticlesSize: 4,
       ...props.directionOptions,
-    },
-    relationLabelOptions: {
-      fontSize: 3,
-      color: 'rgba(126,126,126, 0.9)',
-      display: false,
-      onZoomOutDisplay: false,
-      ...props.relationLabelOptions,
-    },
-    nodeLabelOptions: {
-      fontSize: 4,
-      color: 'rgba(39, 37, 37, 0.9)',
-      display: true,
-      onZoomOutDisplay: false,
-      ...props.nodeLabelOptions,
-    },
-    nodeOptions: {
-      size: 12,
-      disableZoomOnClick: false,
-      /**
-       *
-       * @param {NodeObject} node Node Object
-       * @param {CanvasRenderingContext2D} ctx node canvas context
-       */
-      onHover: (node: NodeObject, ctx: CanvasRenderingContext2D) => {
-        if (node.img && node.x && node.y) {
-          ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
-        }
-      },
-      ...props.nodeOptions,
     },
   };
 
@@ -170,8 +176,8 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       if (properties.nodeLabelOptions?.onZoomOutDisplay === false) {
         properties.nodeLabelOptions.display = false;
       }
-      if (properties.relationLabelOptions?.onZoomOutDisplay === false) {
-        properties.relationLabelOptions.display = false;
+      if (properties.linkLabelOptions?.onZoomOutDisplay === false) {
+        properties.linkLabelOptions.display = false;
       }
     } else {
       if (
@@ -181,10 +187,10 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         properties.nodeLabelOptions.display = true;
       }
       if (
-        properties.relationLabelOptions?.onZoomOutDisplay === false &&
-        properties.relationLabelOptions?.display === false
+        properties.linkLabelOptions?.onZoomOutDisplay === false &&
+        properties.linkLabelOptions?.display === false
       ) {
-        properties.relationLabelOptions.display = true;
+        properties.linkLabelOptions.display = true;
       }
     }
   };
@@ -215,7 +221,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
    */
   const handleLinkClick = useCallback(
     (link: LinkObject): void => {
-      if (!properties.relationOptions?.disableZoomOnClick) {
+      if (!properties.linkOptions?.disableZoomOnClick) {
         const source = link.source as NodeObject;
         const target = link.target as NodeObject;
 
@@ -228,15 +234,18 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
           fgRef.current?.zoom(DEFAULT_ZOOM_LEVEL, 1000);
         }
       }
-      if (properties.relationOptions?.onClick) {
-        properties.relationOptions.onClick(link, fgRef.current);
+      if (properties.linkOptions?.onClick) {
+        properties.linkOptions.onClick(link, fgRef.current);
       }
     },
-    [fgRef, properties.relationOptions?.onClick]
+    [fgRef, properties.linkOptions?.onClick]
   );
+
   const transformedGraph = useMemo(() => {
-    return formatData(properties.data, 0.1);
+    const data = formatData(properties.data, 0.1);
+    return data;
   }, [properties.data]);
+
   useEffect(() => {
     const fg = fgRef.current;
     /**
@@ -244,13 +253,13 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
      * adjusted between two two links.
      */
     if (
-      properties.relationOptions?.distance &&
-      typeof properties.relationOptions?.distance === 'number' &&
+      properties.linkOptions?.distance &&
+      typeof properties.linkOptions?.distance === 'number' &&
       fg
     ) {
-      fg.d3Force('link')?.distance(properties.relationOptions?.distance); // same as linkDistance
+      fg.d3Force('link')?.distance(properties.linkOptions?.distance); // same as linkDistance
     }
-  }, [properties.relationOptions?.distance]);
+  }, [properties.linkOptions?.distance]);
 
   /**
    * Updates the currently highlighted elements (e.g., nodes or links) in the graph.
@@ -271,6 +280,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     highlightLinks.clear();
     if (node) {
       highlightNodes.add(node);
+      console.log('neighbors', node?.neighbors);
       node?.neighbors?.forEach((neighbor: NodeObject) => {
         return highlightNodes.add(neighbor);
       });
@@ -308,7 +318,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
    */
   const drawNode = useCallback(
     (node: NodeObject, ctx: CanvasRenderingContext2D): void => {
-      const size = properties.nodeOptions?.size || 0;
+      const size = Number(node.size) || properties.nodeOptions?.size || 0;
       if (node.x && node.y && node.img) {
         ctx.drawImage(node.img, node.x - size / 2, node.y - size / 2, size, size);
 
@@ -324,7 +334,7 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
         }
       }
       if (properties.nodeOptions?.onHover && node.id === hoverNode) {
-        properties.nodeOptions?.onHover(node, ctx);
+        properties.nodeOptions?.onHover(node, ctx, highlightNodes as Set<NodeObject>);
       }
     },
     [hoverNode]
@@ -341,15 +351,15 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
       let labelOptions: ILabelOptions | undefined = undefined;
       if (link.label) {
         labelOptions = {
-          fontSize: properties.relationLabelOptions?.fontSize,
-          backgroundColor: properties.relationLabelOptions?.backgroundColor,
-          color: properties.relationLabelOptions?.color,
-          font: properties.relationLabelOptions?.font,
-          display: properties.relationLabelOptions?.display,
+          fontSize: properties.linkLabelOptions?.fontSize,
+          backgroundColor: properties.linkLabelOptions?.backgroundColor,
+          color: properties.linkLabelOptions?.color,
+          font: properties.linkLabelOptions?.font,
+          display: properties.linkLabelOptions?.display,
         };
       }
-      const color: string = link.color || properties.relationOptions?.color || '#0000';
-      const width = link.width || properties.relationOptions?.width || 0;
+      const color: string = link.color || properties.linkOptions?.color || '#0000';
+      const width = link.width || properties.linkOptions?.width || 0;
       drawCurvedLine(
         ctx,
         {
@@ -360,15 +370,15 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
           x: (link.target as NodeObject)?.x || 0,
           y: (link.target as NodeObject)?.y || 0,
         },
-        properties.relationOptions?.curvature || 0,
+        properties.linkOptions?.curvature || 0,
         color,
         width as number,
         link.label as string,
         labelOptions
       );
 
-      if (properties.relationOptions?.onHover && highlightLinks.has(link)) {
-        properties.relationOptions.onHover(link, ctx);
+      if (properties.linkOptions?.onHover && highlightLinks.has(link)) {
+        properties.linkOptions.onHover(link, ctx);
       }
     },
     [fgRef]
@@ -415,51 +425,46 @@ export const Stix2Visualizer: React.FC<IStix2Visualizer> = (props) => {
     <ForceGraph2D
       ref={fgRef}
       graphData={transformedGraph}
+      /**
+       * - Node Props
+       */
+      nodeCanvasObject={drawNode}
+      onNodeClick={handleNodeClick}
+      onNodeHover={handleNodeHover}
+      nodeRelSize={properties.nodeOptions?.size}
+      /**
+       * - Link Props
+       */
+      linkCanvasObject={drawLink}
+      onLinkClick={handleLinkClick}
+      linkColor={ArrowAndParticleColor}
+      onLinkHover={handleLinkHover}
+      linkCurvature={properties.linkOptions?.curvature}
+      /**
+       * - Direction Arrow Props
+       */
       linkDirectionalArrowLength={
         properties.directionOptions?.displayDirections
           ? properties.directionOptions?.directionSize
           : 0
       }
       linkDirectionalArrowRelPos={properties.directionOptions?.arrowRelativePositions}
-      linkCurvature={properties.relationOptions?.curvature}
-      nodeCanvasObject={drawNode}
       /**
-       * Focus on Node and Link
-       */
-      onNodeClick={handleNodeClick}
-      onLinkClick={handleLinkClick}
-      /**
-       * Show Direction Particles
+       * - Direction Particle Props
        */
       linkDirectionalParticles={properties.directionOptions?.directionalParticles}
       linkDirectionalParticleSpeed={properties.directionOptions?.directionalParticleSpeed}
+      linkDirectionalParticleWidth={
+        properties.directionOptions?.displayParticles ? particleWidth : undefined
+      }
       /**
-       * Fit to Canvas when interacted with nodes
+       * - Canvas Zoom Props
        */
       cooldownTicks={50}
       onEngineStop={() => {
         return fgRef.current?.zoomToFit(400);
       }}
       onZoom={handleZoom}
-      /**
-       * Highlight Nodes and Edges
-       */
-      nodeRelSize={properties.nodeOptions?.size}
-      linkDirectionalParticleWidth={
-        properties.directionOptions?.displayParticles ? particleWidth : undefined
-      }
-      // linkLabel={properties.relationLabelOptions?.l} //not needed
-      linkColor={ArrowAndParticleColor}
-      linkCanvasObject={drawLink}
-      /**
-       * Follwoing Highlighting features works only with 2D
-       * ----------------------------------------------
-       * autoPauseRedraw={false}
-       * nodeCanvasObjectMode={(node: NodeObject) => highlightNodes.has(node) ? 'before' : undefined}
-       * nodeCanvasObject={paintRing}
-       */
-      onNodeHover={handleNodeHover}
-      onLinkHover={handleLinkHover}
     />
   );
 };
