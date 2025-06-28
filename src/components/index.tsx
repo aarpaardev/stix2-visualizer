@@ -28,20 +28,17 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
       size: 12,
       disableZoomOnClick: false,
       /**
-       *
        * @param {NodeObject} node Node Object
        * @param {CanvasRenderingContext2D} ctx node canvas context
        * @param {Set<NodeObject>} neighbors node canvas context
        */
       onHover: (node: NodeObject, ctx: CanvasRenderingContext2D, neighbors: Set<NodeObject>) => {
         Array.from(neighbors.values()).forEach((neighbor: NodeObject) => {
-          // neighbor.size = 50;
-
           /**
            *
-           * @param neighCtx
-           * @param x
-           * @param y
+           * @param {CanvasRenderingContext2D} neighCtx node canvas context
+           * @param {number} x starting x-axis position of node
+           * @param {number} y starting y-axis position of node
            */
           neighbor.drawHighlight = (
             neighCtx: CanvasRenderingContext2D,
@@ -74,11 +71,12 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
       onHover: (link: LinkObject, ctx: CanvasRenderingContext2D) => {
         ctx.strokeStyle = 'rgba(36, 35, 35, 0.6)';
         ctx.stroke();
+
         /**
          *
-         * @param neighCtx
-         * @param x
-         * @param y
+         * @param {CanvasRenderingContext2D} neighCtx node canvas context
+         * @param {number} x starting x-axis position of node
+         * @param {number} y starting y-axis position of node
          */
         const drawHighlightFunc = (
           neighCtx: CanvasRenderingContext2D,
@@ -329,7 +327,6 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
     }
     setHoverNode(node?.id || null);
     updateHighlight();
-    console.log(highlightNodes);
   };
 
   /**
@@ -343,7 +340,6 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
 
     if (link) {
       highlightLinks.add(link);
-      console.log('checkkkkk', link);
       highlightNodes.add(link.source as NodeObject);
       highlightNodes.add(link.target as NodeObject);
     }

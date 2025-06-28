@@ -42,8 +42,8 @@ export const loadIcons = (
  * @param {string} label label to be displayed
  * @param {CanvasRenderingContext2D} ctx canvas object
  * @param {ILabelOptions} labelOptions label to be displayed on the line
- * @param {number} x starting x-axis and y-axis position
- * @param {number} y ending x-axis and y-axis position
+ * @param {number} x starting x-axis position
+ * @param {number} y ending x-axis position
  * @returns {void}
  */
 export function createLabel(
@@ -61,7 +61,7 @@ export function createLabel(
      * Optional: background box for text
      */
     if (labelOptions.backgroundColor) {
-      ctx.fillStyle = labelOptions.backgroundColor; // 'rgba(0, 0, 0, 0.6)';
+      ctx.fillStyle = labelOptions.backgroundColor;
       const padding = 4;
       const textWidth = ctx.measureText(label).width;
       ctx.fillRect(
@@ -167,12 +167,6 @@ export const formatData = (
               img: icons[object.type] ?? icons[Stix2ObjectTypes.CustomObject],
               val: nodeWidth,
             };
-            // graphData.nodes.push({
-            //   id: object.id,
-            //   name: showNodeLabel ? (object.name ?? object.type) : undefined,
-            //   img: icons[object.type] ?? icons[Stix2ObjectTypes.CustomObject],
-            //   val: nodeWidth,
-            // });
           }
           /**
            * Also add marking definition as relation.
