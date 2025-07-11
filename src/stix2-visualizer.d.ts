@@ -1,8 +1,14 @@
+import React from 'react';
 import { ForceGraphInstance } from 'force-graph';
 import { StixBundle, StixObject, Stix2ObjectTypes } from './components/types';
 
 type Coordinates = { x: number; y: number };
 type ZoomTransformation = { k: number; x: number; y: number };
+
+interface ILegend {
+  type: Stix2ObjectTypes | string;
+  icon?: HTMLImageElement;
+}
 
 type NodeObject<NodeType = object> = NodeType & {
   id: string | number;
@@ -91,6 +97,11 @@ interface GraphData<NodeType = object, LinkType = object> {
   links: LinkObject<NodeType, LinkType>[];
 }
 
+interface FormattedData {
+  data: GraphData;
+  legends: Array<ILegend>;
+}
+
 interface ILabelOptions {
   font?: string;
   fontSize?: number;
@@ -134,21 +145,39 @@ interface INodeOptions {
   onClick?: (node: NodeObject, ref?: ReactForceRef) => void;
 }
 
+type LegendPosition =
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'top-center'
+  | 'bottom-center';
+
+interface ILegendOptions {
+  display?: boolean;
+  position?: LegendPosition;
+  containerStyle?: React.CSSProperties;
+}
+
 interface Stix2VisualizerProps {
   data: StixBundle | object;
   nodeOptions?: INodeOptions;
   linkOptions?: ILinkOptions;
+  legendOptions?: ILegendOptions;
   directionOptions?: ILinkDirectionOptions;
   linkLabelOptions?: ILabelOptions;
   nodeLabelOptions?: ILabelOptions;
 }
 
 export {
+  ILegend,
+  LegendPosition,
   NodeObject,
   LinkObject,
   ILinkOptions,
   Stix2VisualizerProps,
   GraphData,
+  FormattedData,
   ILabelOptions,
   StixBundle,
   StixObject,

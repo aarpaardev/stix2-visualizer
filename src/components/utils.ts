@@ -5,18 +5,21 @@ import type {
   NodeObject,
   StixBundle,
   StixObject,
+  ILegend,
+  FormattedData,
 } from '../stix2-visualizer';
 import { Stix2ObjectTypes } from './types';
 
 /**
  * Create image element from image files.
  * @param {string} objectType Stix2 object name
+ * @param {string} variant icon variant such as round, square
  * @returns {HTMLImageElement} HTML Element
  */
-const createImage = (objectType: string): HTMLImageElement => {
+const createImage = (objectType: string, variant: 'round'): HTMLImageElement => {
   const image = new Image();
   // eslint-disable-next-line no-undef
-  image.src = require(`../assets/stix2Icons/stix2-${objectType}-icon-tiny-round-v1.png`);
+  image.src = require(`../assets/stix2Icons/stix2-${objectType}-icon-tiny-${variant}-v1.png`);
   return image;
 };
 
@@ -32,9 +35,22 @@ export const loadIcons = (
   const notUsed = variant;
   const icons: Partial<Record<Stix2ObjectTypes, HTMLImageElement>> = {};
   for (const value of Object.values(Stix2ObjectTypes)) {
-    icons[value as Stix2ObjectTypes] = createImage(value);
+    icons[value as Stix2ObjectTypes] = createImage(value, variant);
   }
   return icons;
+};
+
+/**
+ * Truncates label according to mprovided axLength
+ * @param {string} input input string / label
+ * @param {number} maxLength Maximum characters of string
+ * @returns {string} truncated label
+ */
+export const truncateLabel = (input: string, maxLength = 50): string => {
+  if (input.length <= maxLength) {
+    return input;
+  }
+  return `${input.slice(0, maxLength - 3)}...`;
 };
 
 /**
@@ -60,10 +76,11 @@ export function createLabel(
     /**
      * Optional: background box for text
      */
+    const tuncatedLabel = truncateLabel(label);
     if (labelOptions.backgroundColor) {
       ctx.fillStyle = labelOptions.backgroundColor;
       const padding = 4;
-      const textWidth = ctx.measureText(label).width;
+      const textWidth = ctx.measureText(tuncatedLabel).width;
       ctx.fillRect(
         x - textWidth / 2 - padding,
         y - fontSzie,
@@ -76,7 +93,7 @@ export function createLabel(
     ctx.font = `${fontSzie}px ${font || 'sans-serif'}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(label, x, y);
+    ctx.fillText(tuncatedLabel, x, y);
   }
 }
 
@@ -119,6 +136,20 @@ export const crossLink = (link: LinkObject, nodes: Record<string, NodeObject>): 
 };
 
 /**
+ * Transform labels to human readable form
+ * @param {string} input input string / label
+ * @returns {string} transformed label
+ */
+export const formatLegendLabel = (input: string): string => {
+  return input
+    .split('-')
+    .map((word: string) => {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+};
+
+/**
  * Transform stix data into graph data.
  * @param {Record<string, unknown> | JSON} data Stix2 object name
  * @param {number} nodeWidth Node width
@@ -133,9 +164,11 @@ export const formatData = (
   showNodeLabel = true,
   showLinkLabel = true,
   iconShape: 'round' = 'round'
-): GraphData => {
+): FormattedData => {
   const graphData: GraphData = { links: [], nodes: [] };
   const nodes: Record<string, NodeObject> = {};
+  const legends: Array<ILegend> = [];
+  const legendSet = new Set<string>();
   const stixBundle = data as StixBundle;
   if (stixBundle && stixBundle.objects) {
     const icons = loadIcons(iconShape);
@@ -167,6 +200,13 @@ export const formatData = (
               img: icons[object.type] ?? icons[Stix2ObjectTypes.CustomObject],
               val: nodeWidth,
             };
+            if (!legendSet.has(object.type)) {
+              legendSet.add(object.type);
+              legends.push({
+                type: object.type,
+                icon: nodes[object.id].img,
+              });
+            }
           }
           /**
            * Also add marking definition as relation.
@@ -194,5 +234,8 @@ export const formatData = (
     crossLink(link, nodes);
   });
   graphData.nodes = Object.values(nodes);
-  return graphData;
+  return {
+    data: graphData,
+    legends: legends,
+  };
 };

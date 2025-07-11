@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ForceGraph2D } from 'react-force-graph';
-import { createLabel, formatData } from './utils';
+import { createLabel, formatData, formatLegendLabel } from './utils';
 import {
   ILabelOptions,
   Stix2VisualizerProps,
@@ -9,6 +9,7 @@ import {
   Coordinates,
   ReactForceRef,
   ZoomTransformation,
+  LegendPosition,
 } from '../stix2-visualizer';
 
 /**
@@ -98,6 +99,11 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
         }
       },
       ...props.linkOptions,
+    },
+    legendOptions: {
+      display: true,
+      position: 'top-right',
+      ...props.legendOptions,
     },
     nodeLabelOptions: {
       fontSize: 4,
@@ -279,7 +285,7 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
     [fgRef, properties.linkOptions?.onClick]
   );
 
-  const transformedGraph = useMemo(() => {
+  const transformedGraphData = useMemo(() => {
     const data = formatData(properties.data, 0.1);
     return data;
   }, [properties.data]);
@@ -468,50 +474,93 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
     return '#00000';
   }, []);
 
+  const positionStyles: Record<LegendPosition, React.CSSProperties> = {
+    'top-left': { top: 10, left: 10 },
+    'top-right': { top: 10, right: 10 },
+    'bottom-left': { bottom: 10, left: 10 },
+    'bottom-right': { bottom: 10, right: 10 },
+    'top-center': { top: 10, left: '50%', transform: 'translateX(-50%)' },
+    'bottom-center': { bottom: 10, left: '50%', transform: 'translateX(-50%)' },
+  };
+
   return (
-    <ForceGraph2D
-      ref={fgRef}
-      graphData={transformedGraph}
-      /**
-       * - Node Props
-       */
-      nodeCanvasObject={drawNode}
-      onNodeClick={handleNodeClick}
-      onNodeHover={handleNodeHover}
-      nodeRelSize={properties.nodeOptions?.size}
-      /**
-       * - Link Props
-       */
-      linkCanvasObject={drawLink}
-      onLinkClick={handleLinkClick}
-      linkColor={ArrowAndParticleColor}
-      onLinkHover={handleLinkHover}
-      linkCurvature={properties.linkOptions?.curvature}
-      /**
-       * - Direction Arrow Props
-       */
-      linkDirectionalArrowLength={
-        properties.directionOptions?.displayDirections
-          ? properties.directionOptions?.directionSize
-          : 0
-      }
-      linkDirectionalArrowRelPos={properties.directionOptions?.arrowRelativePositions}
-      /**
-       * - Direction Particle Props
-       */
-      linkDirectionalParticles={properties.directionOptions?.directionalParticles}
-      linkDirectionalParticleSpeed={properties.directionOptions?.directionalParticleSpeed}
-      linkDirectionalParticleWidth={
-        properties.directionOptions?.displayParticles ? particleWidth : undefined
-      }
-      /**
-       * - Canvas Zoom Props
-       */
-      cooldownTicks={50}
-      onEngineStop={() => {
-        return fgRef.current?.zoomToFit(400);
-      }}
-      onZoom={handleZoom}
-    />
+    <div>
+      {properties.legendOptions?.display && properties.legendOptions.position && (
+        <div
+          style={{
+            position: 'absolute',
+            zIndex: 1000,
+            padding: '10px',
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            border: '1px dashed #999',
+            borderRadius: '8px',
+            ...positionStyles[properties.legendOptions.position],
+            ...properties.legendOptions.containerStyle,
+          }}
+        >
+          {transformedGraphData.legends.map((legend, index) => {
+            return (
+              <div
+                key={index}
+                style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}
+              >
+                {legend.icon && (
+                  <img
+                    src={legend.icon.src}
+                    alt={legend.type}
+                    style={{ width: 20, height: 20, marginRight: 8 }}
+                  />
+                )}
+                <span>{formatLegendLabel(legend.type)}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <ForceGraph2D
+        ref={fgRef}
+        graphData={transformedGraphData.data}
+        /**
+         * - Node Props
+         */
+        nodeCanvasObject={drawNode}
+        onNodeClick={handleNodeClick}
+        onNodeHover={handleNodeHover}
+        nodeRelSize={properties.nodeOptions?.size}
+        /**
+         * - Link Props
+         */
+        linkCanvasObject={drawLink}
+        onLinkClick={handleLinkClick}
+        linkColor={ArrowAndParticleColor}
+        onLinkHover={handleLinkHover}
+        linkCurvature={properties.linkOptions?.curvature}
+        /**
+         * - Direction Arrow Props
+         */
+        linkDirectionalArrowLength={
+          properties.directionOptions?.displayDirections
+            ? properties.directionOptions?.directionSize
+            : 0
+        }
+        linkDirectionalArrowRelPos={properties.directionOptions?.arrowRelativePositions}
+        /**
+         * - Direction Particle Props
+         */
+        linkDirectionalParticles={properties.directionOptions?.directionalParticles}
+        linkDirectionalParticleSpeed={properties.directionOptions?.directionalParticleSpeed}
+        linkDirectionalParticleWidth={
+          properties.directionOptions?.displayParticles ? particleWidth : undefined
+        }
+        /**
+         * - Canvas Zoom Props
+         */
+        cooldownTicks={50}
+        onEngineStop={() => {
+          return fgRef.current?.zoomToFit(400);
+        }}
+        onZoom={handleZoom}
+      />
+    </div>
   );
 };
