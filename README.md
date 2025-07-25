@@ -46,16 +46,161 @@ export default function App() {
 
 ### `Stix2VisualizerProps`
 
-| Prop                 | Type                              | Default Value                                        | Description |
-|----------------------|-----------------------------------|------------------------------------------------------|-------------|
-| `data`               | `StixBundle \| object`            | **Required**                                         | STIX bundle or any valid STIX-compatible object |
-| `nodeOptions`        | `INodeOptions`                    | `{ size: 12, disableZoomOnClick: false, ...}`        | Customize node size, hover, click, and zoom behavior |
-| `linkOptions`        | `ILinkOptions`                    | `{ width: 1, curvature: 0.25, ...}`                  | Control link appearance, hover, click, and zoom behavior |
-| `legendOptions`      | `ILegendOptions`                  | `{ display: true, position: 'top-right' }`           | Show/hide the legend and set its position on screen |
-| `directionOptions`   | `ILinkDirectionOptions`           | `{ directionalParticles: 10, displayDirections: true, ...}` | Configure particle and arrow animations on links |
-| `nodeLabelOptions`   | `ILabelOptions`                   | `{ fontSize: 4, color: 'rgba(39,37,37,0.9)', display: true }` | Control font, color, visibility, and zoom-out behavior of node labels |
-| `linkLabelOptions`   | `ILabelOptions`                   | `{ fontSize: 3, color: 'rgba(126,126,126,0.9)', display: false }` | Control font, color, visibility, and zoom-out behavior of link labels |
+| Prop               | Type                   | Required | Description |
+|--------------------|------------------------|----------|-------------|
+| `data`             | `StixBundle \| object` | ✅      | A valid [STIX 2.x Bundle JSON object](https://oasis-open.github.io/cti-documentation/stix/intro) that defines the entities and relationships to be visualized. Refer to [this sample STIX bundle](https://oasis-open.github.io/cti-documentation/examples/example_json/apt1.json) for reference. |
+| `nodeOptions`      | `INodeOptions`         | ❌      | Configuration for visual node appearance (e.g., color, radius, interactivity). See table below. |
+| `linkOptions`      | `ILinkOptions`         | ❌      | Configuration for link appearance and behavior. See table below. |
+| `legendOptions`    | `ILegendOptions`       | ❌      | Options for showing and positioning the legend. See table below. |
+| `directionOptions` | `ILinkDirectionOptions`| ❌      | Defines directional indicators on links like arrows and particles. See table below. |
+| `linkLabelOptions` | `ILabelOptions`        | ❌      | Options for displaying text labels on links. See table below. |
+| `nodeLabelOptions` | `ILabelOptions`        | ❌      | Options for displaying text labels on nodes. See table below. |
 
+#### `nodeOptions` Props
+
+| Property             | Type                             | Default       | Description                                                                  |
+| -------------------- | -------------------------------- | ------------- | ---------------------------------------------------------------------------- |
+| `size`               | `number`                         | `12`          | Node size in pixels.                                                         |
+| `disableZoomOnClick` | `boolean`                        | `false`       | Disables zoom behavior on node click.                                        |
+| `onHover`            | `(node, ctx, neighbors) => void` | *(See below)* | Callback for when a node is hovered. Highlights neighboring nodes.           |
+| `onClick`            | `(node, ref?) => void`           | `undefined`   | Callback for when a node is clicked. You can access the graph ref if needed. |
+
+
+###### Default `onHover`
+
+```ts
+{
+  size: 12,
+  disableZoomOnClick: false,
+  /**
+   * @param {NodeObject} node Node Object
+   * @param {CanvasRenderingContext2D} ctx node canvas context
+   * @param {Set<NodeObject>} neighbors node canvas context
+   */
+  onHover: (node: NodeObject, ctx: CanvasRenderingContext2D, neighbors: Set<NodeObject>) => {
+    Array.from(neighbors.values()).forEach((neighbor: NodeObject) => {
+      /**
+       *
+       * @param {CanvasRenderingContext2D} neighCtx node canvas context
+       * @param {number} x starting x-axis position of node
+       * @param {number} y starting y-axis position of node
+       */
+      neighbor.drawHighlight = (
+        neighCtx: CanvasRenderingContext2D,
+        x: number,
+        y: number
+      ): void => {
+        neighCtx.beginPath();
+        neighCtx.arc(x, y, 10, 0, Math.PI * 2); // full circle
+        neighCtx.fillStyle = 'rgba(182, 181, 181, 0.5)';
+        neighCtx.fill();
+        neighCtx.stroke();
+      };
+    });
+    if (node.img && node.x && node.y) {
+      ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
+    }
+  }
+}
+```
+
+#### `linkOptions` Props
+
+| Prop                 | Type                                                        | Default                           | Description                                                       |
+| -------------------- | ----------------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------- |
+| `width`              | `number` \| `(link: LinkObject) => number`                  | `1`                               | Width of the link line or a function to calculate it dynamically. |
+| `curvature`          | `number`                                                    | `0.25`                            | Controls how curved the link lines are.                           |
+| `distance`           | `number`                                                    | `60`                              | Distance between connected nodes.                                 |
+| `color`              | `string`                                                    | `'rgba(126,126,126, 0.6)'`        | Stroke color of the link.                                         |
+| `disableZoomOnClick` | `boolean`                                                   | `false`                           | Prevents zoom on link click if set to `true`.                     |
+| `onHover`            | `(link: LinkObject, ctx: CanvasRenderingContext2D) => void` | *(See below)*                     | Callback invoked when hovering over a link.                       |
+| `onClick`            | `(link: LinkObject, ref?: ReactForceRef) => void`           | `undefined`                       | Callback invoked when clicking a link.                            |
+
+
+
+###### Default `onHover`
+
+```ts
+{
+  size: 12,
+  disableZoomOnClick: false,
+  /**
+   * @param {NodeObject} node Node Object
+   * @param {CanvasRenderingContext2D} ctx node canvas context
+   * @param {Set<NodeObject>} neighbors node canvas context
+   */
+  onHover: (node: NodeObject, ctx: CanvasRenderingContext2D, neighbors: Set<NodeObject>) => {
+    Array.from(neighbors.values()).forEach((neighbor: NodeObject) => {
+      /**
+       *
+       * @param {CanvasRenderingContext2D} neighCtx node canvas context
+       * @param {number} x starting x-axis position of node
+       * @param {number} y starting y-axis position of node
+       */
+      neighbor.drawHighlight = (
+        neighCtx: CanvasRenderingContext2D,
+        x: number,
+        y: number
+      ): void => {
+        neighCtx.beginPath();
+        neighCtx.arc(x, y, 10, 0, Math.PI * 2); // full circle
+        neighCtx.fillStyle = 'rgba(182, 181, 181, 0.5)';
+        neighCtx.fill();
+        neighCtx.stroke();
+      };
+    });
+    if (node.img && node.x && node.y) {
+      ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
+    }
+  }
+}
+```
+
+#### `legendOptions` Props
+
+| Prop            | Type                       | Default       | Description                                                                                 |
+|-----------------|----------------------------|---------------|---------------------------------------------------------------------------------------------|
+| `display`       | `boolean`                  | `true`        | Whether to show the legend.                                                                 |
+| `position`      | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'top-right'` | Position of the legend in the container.                |
+| `containerStyle`| `React.CSSProperties`      | `undefined`   | Optional custom style object for the legend container.                                      |
+
+
+#### `nodeLabelOptions` Props
+
+| Prop               | Type            | Default                        | Description                                                       |
+|--------------------|-----------------|--------------------------------|-------------------------------------------------------------------|
+| `font`             | `string`        | `undefined`                    | Font family to use for labels (e.g., `'Arial'`, `'Roboto'`).     |
+| `fontSize`         | `number`        | `4`                            | Size of the label font.                                           |
+| `backgroundColor`  | `string`        | `undefined`                    | Optional background color behind the label.                       |
+| `color`            | `string`        | `'rgba(39, 37, 37, 0.9)'`      | Color of the label text.                                          |
+| `display`          | `boolean`       | `true`                         | Whether to display the label.                                     |
+| `onZoomOutDisplay` | `boolean`       | `false`                        | Whether to continue showing the label when zoomed out.            |
+
+#### `linkLabelOptions` Props
+
+| Prop               | Type            | Default                        | Description                                                       |
+|--------------------|-----------------|--------------------------------|-------------------------------------------------------------------|
+| `font`             | `string`        | `undefined`                    | Font family to use for labels (e.g., `'Arial'`, `'Roboto'`).     |
+| `fontSize`         | `number`        | `4`                            | Size of the label font.                                           |
+| `backgroundColor`  | `string`        | `undefined`                    | Optional background color behind the label.                       |
+| `color`            | `string`        | `'rgba(39, 37, 37, 0.9)'`      | Color of the label text.                                          |
+| `display`          | `boolean`       | `true`                         | Whether to display the label.                                     |
+| `onZoomOutDisplay` | `boolean`       | `false`                        | Whether to continue showing the label when zoomed out.            |
+
+#### `directionOptions` Props
+
+| Prop                                       | Type                                         | Default                        | Description                                                                 |
+|--------------------------------------------|----------------------------------------------|--------------------------------|-----------------------------------------------------------------------------|
+| `directionSize`                            | `number` \| `(link: LinkObject) => number`   | `4`                            | Size of the arrow indicating direction.                                     |
+| `arrowRelativePositions`                   | `number` \| `(link: LinkObject) => number`   | `0.98`                         | Position of the arrow relative to the link length.                          |
+| `directionalParticles`                     | `number` \| `(link: LinkObject) => number`   | `10`                           | Number of directional particles to display on a link.                       |
+| `directionalParticleSize`                  | `number` \| `(link: LinkObject) => number`   | `1`                            | Size of directional particles.                                              |
+| `directionalParticleSpeed`                 | `number` \| `(link: LinkObject) => number`   | `0.005`                        | Speed of directional particles.                                             |
+| `directionalParticlesAndArrowColor`        | `string` \| `(link: LinkObject) => string`   | `'rgba(0, 0, 0, 0, 0)'`        | Color of both arrows and directional particles.                             |
+| `onHoverParticlesSize`                     | `number`                                     | `4`                            | Size of directional particles on hover.                                     |
+| `onHoverArrowSize`                         | `number`                                     | `undefined`                    | Optional custom arrow size on hover.                                        |
+| `displayDirections`                        | `boolean`                                    | `true`                         | Whether to display link directions using arrows.                            |
+| `displayParticles`                         | `boolean`                                    | `true`                         | Whether to display directional particles along the links (Greater than `0` will cause the canvas to be **continuously redrawn** to simulate particle motion). |
 
 ## 📚 Storybook
 
@@ -74,7 +219,7 @@ http://localhost:6006
 ```
 You can visually explore all customizable props, states, and interactions of the Stix2Visualizer component from there.
 
-## 🧱 Interfaces
+## 🧱 Interfaces & Types
 
 ### `ILabelOptions`
 
@@ -142,6 +287,10 @@ interface ILinkDirectionOptions {
 ```
 Configures directional arrows and animated particles on links.
 
+> ⚠️ **Performance Note**  
+> If `directionalParticles` is greater than `0`, the canvas will be **continuously redrawn** to simulate particle motion.  
+> This may **impact performance** on large graphs. Use this option **with caution**.
+
 ### `ILegendOptions`
 
 ```ts
@@ -159,7 +308,47 @@ interface ILegendOptions {
   containerStyle?: React.CSSProperties;
 }
 ```
-Manages whether the legend is shown and where it appears on screen.
+
+### `NodeObject`
+
+```ts
+type NodeObject<NodeType = object> = NodeType & {
+  id: string | number;
+  img?: HTMLImageElement;
+  size?: number;
+  name?: string;
+  val?: number;
+  x?: number;
+  y?: number;
+  z?: number;
+  vx?: number;
+  vy?: number;
+  vz?: number;
+  fx?: number;
+  fy?: number;
+  fz?: number;
+  draw?: (ctx: CanvasRenderingContext2D, x: number, y: number) => void;
+  drawHighlight?: (ctx: CanvasRenderingContext2D, x: number, y: number) => void;
+  neighbors?: Array<NodeObject>;
+  links?: Array<LinkObject>;
+  [others: string]: unknown;
+};  
+```
+Represents a node in the visualizer. This is a generic structure and can be extended with additional fields as needed.
+
+
+### `LinkObject`
+
+```ts
+type LinkObject<NodeType = object, LinkType = object> = LinkType & {
+  source?: string | number | NodeObject<NodeType>;
+  target?: string | number | NodeObject<NodeType>;
+  color?: string;
+  [others: string]: unknown;
+};
+```
+Defines a connection between two nodes. Can be enriched with custom properties.
+
 
 ## 🛠 Development
 
