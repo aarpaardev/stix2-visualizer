@@ -69,37 +69,33 @@ export default function App() {
 ###### Default `onHover`
 
 ```ts
-{
-  size: 12,
-  disableZoomOnClick: false,
-  /**
-   * @param {NodeObject} node Node Object
-   * @param {CanvasRenderingContext2D} ctx node canvas context
-   * @param {Set<NodeObject>} neighbors node canvas context
-   */
-  onHover: (node: NodeObject, ctx: CanvasRenderingContext2D, neighbors: Set<NodeObject>) => {
-    Array.from(neighbors.values()).forEach((neighbor: NodeObject) => {
-      /**
-       *
-       * @param {CanvasRenderingContext2D} neighCtx node canvas context
-       * @param {number} x starting x-axis position of node
-       * @param {number} y starting y-axis position of node
-       */
-      neighbor.drawHighlight = (
-        neighCtx: CanvasRenderingContext2D,
-        x: number,
-        y: number
-      ): void => {
-        neighCtx.beginPath();
-        neighCtx.arc(x, y, 10, 0, Math.PI * 2); // full circle
-        neighCtx.fillStyle = 'rgba(182, 181, 181, 0.5)';
-        neighCtx.fill();
-        neighCtx.stroke();
-      };
-    });
-    if (node.img && node.x && node.y) {
-      ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
-    }
+/**
+ * @param {NodeObject} node Node Object
+ * @param {CanvasRenderingContext2D} ctx node canvas context
+ * @param {Set<NodeObject>} neighbors node canvas context
+ */
+(node: NodeObject, ctx: CanvasRenderingContext2D, neighbors: Set<NodeObject>) => {
+  Array.from(neighbors.values()).forEach((neighbor: NodeObject) => {
+    /**
+     *
+     * @param {CanvasRenderingContext2D} neighCtx node canvas context
+     * @param {number} x starting x-axis position of node
+     * @param {number} y starting y-axis position of node
+     */
+    neighbor.drawHighlight = (
+      neighCtx: CanvasRenderingContext2D,
+      x: number,
+      y: number
+    ): void => {
+      neighCtx.beginPath();
+      neighCtx.arc(x, y, 10, 0, Math.PI * 2); // full circle
+      neighCtx.fillStyle = 'rgba(182, 181, 181, 0.5)';
+      neighCtx.fill();
+      neighCtx.stroke();
+    };
+  });
+  if (node.img && node.x && node.y) {
+    ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
   }
 }
 ```
@@ -121,37 +117,37 @@ export default function App() {
 ###### Default `onHover`
 
 ```ts
-{
-  size: 12,
-  disableZoomOnClick: false,
+/**
+ * @param {LinkObject} link link Object
+ * @param {CanvasRenderingContext2D} ctx node canvas context
+ */
+(link: LinkObject, ctx: CanvasRenderingContext2D) => {
+  ctx.strokeStyle = 'rgba(36, 35, 35, 0.6)';
+  ctx.stroke();
+
   /**
-   * @param {NodeObject} node Node Object
-   * @param {CanvasRenderingContext2D} ctx node canvas context
-   * @param {Set<NodeObject>} neighbors node canvas context
+   *
+   * @param {CanvasRenderingContext2D} neighCtx node canvas context
+   * @param {number} x starting x-axis position of node
+   * @param {number} y starting y-axis position of node
    */
-  onHover: (node: NodeObject, ctx: CanvasRenderingContext2D, neighbors: Set<NodeObject>) => {
-    Array.from(neighbors.values()).forEach((neighbor: NodeObject) => {
-      /**
-       *
-       * @param {CanvasRenderingContext2D} neighCtx node canvas context
-       * @param {number} x starting x-axis position of node
-       * @param {number} y starting y-axis position of node
-       */
-      neighbor.drawHighlight = (
-        neighCtx: CanvasRenderingContext2D,
-        x: number,
-        y: number
-      ): void => {
-        neighCtx.beginPath();
-        neighCtx.arc(x, y, 10, 0, Math.PI * 2); // full circle
-        neighCtx.fillStyle = 'rgba(182, 181, 181, 0.5)';
-        neighCtx.fill();
-        neighCtx.stroke();
-      };
-    });
-    if (node.img && node.x && node.y) {
-      ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
-    }
+  const drawHighlightFunc = (
+    neighCtx: CanvasRenderingContext2D,
+    x: number,
+    y: number
+  ): void => {
+    neighCtx.beginPath();
+    neighCtx.arc(x, y, 10, 0, Math.PI * 2); // full circle
+    neighCtx.fillStyle = 'rgba(182, 181, 181, 0.5)';
+    neighCtx.fill();
+    neighCtx.stroke();
+  };
+
+  if (link.source) {
+    (link.source as NodeObject).drawHighlight = drawHighlightFunc;
+  }
+  if (link.target) {
+    (link.target as NodeObject).drawHighlight = drawHighlightFunc;
   }
 }
 ```
