@@ -36,6 +36,8 @@ type NodeObject<NodeType = object> = NodeType & {
 type LinkObject<NodeType = object, LinkType = object> = LinkType & {
   source?: string | number | NodeObject<NodeType>;
   target?: string | number | NodeObject<NodeType>;
+  drawHighlight?: (ctx: CanvasRenderingContext2D) => void;
+  particleWidth?: number;
   color?: string;
   // width?: number;
   [others: string]: unknown;
