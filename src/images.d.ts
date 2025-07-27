@@ -1,5 +1,6 @@
 // images.d.ts
 declare module '*.png' {
-    const value: string;
-    export default value;
-  }
+  // eslint-disable-next-line init-declarations
+  const value: string;
+  export default value;
+}

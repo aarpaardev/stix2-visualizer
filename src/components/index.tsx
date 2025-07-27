@@ -53,6 +53,9 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
             neighCtx.stroke();
           };
         });
+        node.links?.forEach((link: LinkObject) => {
+          link.particleWidth = 4;
+        });
         if (node.img && node.x && node.y) {
           ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
         }
@@ -90,7 +93,6 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
           neighCtx.fill();
           neighCtx.stroke();
         };
-
         if (link.source) {
           (link.source as NodeObject).drawHighlight = drawHighlightFunc;
         }
@@ -327,9 +329,6 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
       node?.neighbors?.forEach((neighbor: NodeObject) => {
         return highlightNodes.add(neighbor);
       });
-      node?.links?.forEach((link: LinkObject) => {
-        return highlightLinks.add(link);
-      });
     }
     setHoverNode(node?.id || null);
     updateHighlight();
@@ -346,8 +345,6 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
 
     if (link) {
       highlightLinks.add(link);
-      highlightNodes.add(link.source as NodeObject);
-      highlightNodes.add(link.target as NodeObject);
     }
 
     updateHighlight();
@@ -365,7 +362,7 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
       if (node.x && node.y && node.img) {
         ctx.drawImage(node.img, node.x - size / 2, node.y - size / 2, size, size);
         if (node.drawHighlight) {
-          if (highlightNodes.size > 0) {
+          if (highlightNodes.size > 0 || highlightLinks.size > 0) {
             node.drawHighlight(ctx, node.x, node.y);
           } else {
             /**
@@ -429,8 +426,15 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
         link.label as string,
         labelOptions
       );
-
-      if (properties.linkOptions?.onHover && highlightLinks.has(link)) {
+      if (highlightNodes.size > 0 || highlightLinks.size > 0) {
+        if (link.drawHighlight) {
+          link.drawHighlight(ctx);
+        }
+      } else {
+        link.drawHighlight = undefined;
+        link.particleWidth = undefined;
+      }
+      if (highlightNodes.size <= 0 && properties.linkOptions?.onHover && highlightLinks.has(link)) {
         properties.linkOptions.onHover(link, ctx);
       }
     },
@@ -444,7 +448,9 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
    */
   const particleWidth = useCallback(
     (link: LinkObject): number => {
-      if (highlightLinks.has(link)) {
+      if (typeof link.particleWidth === 'number') {
+        return link.particleWidth;
+      } else if (highlightLinks.has(link)) {
         return properties.directionOptions?.onHoverParticlesSize || 0;
       } else if (typeof properties.directionOptions?.directionalParticleSize === 'number') {
         return properties.directionOptions?.directionalParticleSize;

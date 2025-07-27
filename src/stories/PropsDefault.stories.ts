@@ -1,33 +1,25 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { fn } from '@storybook/test';
-
-import { Header } from './Header';
+import APT1 from '../examples/MandiantAPT1Report.json';
+import { Stix2Visualizer } from '../components';
 
 const meta = {
-  title: 'Example/Header',
-  component: Header,
+  title: 'Props/Default Visualization',
+  component: Stix2Visualizer,
   // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
   tags: ['autodocs'],
   parameters: {
     // More on how to position stories at: https://storybook.js.org/docs/configure/story-layout
     layout: 'fullscreen',
   },
-  args: {
-    onLogin: fn(),
-    onLogout: fn(),
-    onCreateAccount: fn(),
-  },
-} satisfies Meta<typeof Header>;
+} satisfies Meta<typeof Stix2Visualizer>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const LoggedIn: Story = {
+export const DefaultProperties: Story = {
   args: {
-    user: {
-      name: 'Jane Doe',
-    },
+    data: APT1,
   },
 };
 
-export const LoggedOut: Story = {};
+DefaultProperties.storyName = 'Default properties';
