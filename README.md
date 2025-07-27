@@ -1,10 +1,6 @@
 # 📦 STIX Visualizer
 
-**STIX Visualizer** is a customizable and interactive React component to visualize [STIX 2.0](https://oasis-open.github.io/cti-documentation/stix/intro) bundles using canvas and force-directed graphs. It supports nodes, links, labels, legends, directional particles, and full styling and behavior overrides.
-
-<p align="center">
-  <img width="1880" height="766" alt="STIX Visualizer Preview" src="https://github.com/user-attachments/assets/04409ada-94ab-4239-a3c7-525bfc0d710b" />
-</p>
+**STIX Visualizer** is a React-based, enhanced version of the [OASIS CTI STIX Visualization project](https://oasis-open.github.io/cti-stix-visualization/). It offers interactive canvas-based rendering of [STIX 2.0](https://oasis-open.github.io/cti-documentation/stix/intro) bundles with support for custom nodes, links, labels, and complete styling and behavior control.
 
 ---
 
@@ -35,12 +31,15 @@ import exampleData from './stix-bundle.json';
 
 export default function App() {
   return (
-    <div style={{ height: '100vh' }}>
-      <Stix2Visualizer data={exampleData} />
-    </div>
+    <Stix2Visualizer data={exampleData} />
   );
 }
 ```
+
+<p align="center">
+  <img width="1024" height="768" alt="STIX Visualizer Preview" src="https://github.com/user-attachments/assets/04409ada-94ab-4239-a3c7-525bfc0d710b" />
+</p>
+
 
 ## 🧩 Props
 
@@ -94,6 +93,9 @@ export default function App() {
       neighCtx.stroke();
     };
   });
+  node.links?.forEach((link: LinkObject) => {
+    link.particleWidth = 4;
+  });
   if (node.img && node.x && node.y) {
     ctx.drawImage(node.img, node.x - 20 / 2, node.y - 20 / 2, 20, 20);
   }
@@ -142,7 +144,6 @@ export default function App() {
     neighCtx.fill();
     neighCtx.stroke();
   };
-
   if (link.source) {
     (link.source as NodeObject).drawHighlight = drawHighlightFunc;
   }
@@ -339,6 +340,8 @@ Represents a node in the visualizer. This is a generic structure and can be exte
 type LinkObject<NodeType = object, LinkType = object> = LinkType & {
   source?: string | number | NodeObject<NodeType>;
   target?: string | number | NodeObject<NodeType>;
+  drawHighlight?: (ctx: CanvasRenderingContext2D) => void;
+  particleWidth?: number;
   color?: string;
   [others: string]: unknown;
 };
