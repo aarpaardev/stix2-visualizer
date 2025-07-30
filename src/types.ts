@@ -1,5 +1,6 @@
 import React from 'react';
-import { ForceGraphInstance } from 'force-graph';
+
+import ForceGraphInstance from 'force-graph';
 import { StixBundle, StixObject, Stix2ObjectTypes } from './components/types';
 
 type Coordinates = { x: number; y: number };

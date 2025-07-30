@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ForceGraph2D } from 'react-force-graph';
+import ForceGraph2D from 'react-force-graph-2d';
 import { createLabel, formatData, formatLegendLabel } from './utils';
 import {
   ILabelOptions,
@@ -10,7 +10,7 @@ import {
   ReactForceRef,
   ZoomTransformation,
   LegendPosition,
-} from '../stix2-visualizer';
+} from '../types';
 
 /**
  * Only trigger if zoom-out is more than 20%

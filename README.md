@@ -15,30 +15,75 @@
 
 ---
 
+<p align="center">
+  <img width="1024" height="768" alt="STIX Visualizer Preview" src="https://github.com/user-attachments/assets/04409ada-94ab-4239-a3c7-525bfc0d710b" />
+</p>
+
 ## 📦 Installation
 
 ```bash
-npm install stix-visualizer
+npm install @aarpaardev/stix-visualizer
 # or
-yarn add stix-visualizer
+yarn add @aarpaardev/stix-visualizer
 ```
 
 ## 🔰 Usage
 
+###  🧩 React (via npm/yarn)
 ```tsx
-import { Stix2Visualizer } from 'stix-visualizer';
-import exampleData from './stix-bundle.json';
+import React, { useEffect, useState } from 'react';
+import { Stix2Visualizer } from '@aarpaardev/stix-visualizer';
 
 export default function App() {
-  return (
-    <Stix2Visualizer data={exampleData} />
-  );
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch('https://raw.githubusercontent.com/mmali277/stix2-visualizer/main/src/examples/MandiantAPT1Report.json')
+      .then(res => res.json())
+      .then(setData);
+  }, []);
+
+  if (!data) return <div>Loading...</div>;
+
+  return <Stix2Visualizer data={data} />;
 }
 ```
 
-<p align="center">
-  <img width="1024" height="768" alt="STIX Visualizer Preview" src="https://github.com/user-attachments/assets/04409ada-94ab-4239-a3c7-525bfc0d710b" />
-</p>
+###  🌐 HTML (via CDN/UMD)
+
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>STIX Visualizer Test</title>
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- UMD Bundle of Stix Visualizer -->
+  <script src="https://unpkg.com/@aarpaardev/stix-visualizer@latest/dist/index.min.js"></script>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script>
+
+    // Load a STIX2 JSON file
+    fetch('https://raw.githubusercontent.com/mmali277/stix2-visualizer/main/src/examples/MandiantAPT1Report.json')
+      .then(res => res.json())
+      .then(json => {
+        props = { data: json };
+
+        const Visualizer = window.AaarPaarDevStixVisualizer.Stix2Visualizer;
+        ReactDOM.render(React.createElement(Visualizer, props), document.getElementById('root'));
+      });
+  </script>
+</body>
+
+</html>
+```
 
 
 ## 🧩 Props
