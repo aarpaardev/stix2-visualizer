@@ -7,8 +7,9 @@ import type {
   StixObject,
   ILegend,
   FormattedData,
-} from '../stix2-visualizer';
+} from '../types';
 import { Stix2ObjectTypes } from './types';
+import Icons from './icons';
 
 /**
  * Create image element from image files.
@@ -19,7 +20,8 @@ import { Stix2ObjectTypes } from './types';
 const createImage = (objectType: string, variant: 'round'): HTMLImageElement => {
   const image = new Image();
   // eslint-disable-next-line no-undef
-  image.src = require(`../assets/stix2Icons/stix2-${objectType}-icon-tiny-${variant}-v1.png`);
+
+  image.src = Icons[variant][objectType];
   return image;
 };
 

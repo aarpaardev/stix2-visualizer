@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import APT1 from '../examples/MandiantAPT1Report.json';
 import { Stix2Visualizer } from '../components';
-import { NodeObject, LinkObject, ReactForceRef } from '../stix2-visualizer';
+import { NodeObject, LinkObject, ReactForceRef } from '../types';
 import { action } from '@storybook/addon-actions';
 
 const meta = {
