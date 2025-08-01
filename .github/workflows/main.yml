@@ -49,6 +49,7 @@ jobs:
       - name: Build Storybook
         run: npm run build-storybook
 
+      # Always build and deploy storybook first to make sure it does work.
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
