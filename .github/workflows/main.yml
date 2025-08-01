@@ -2,23 +2,47 @@ name: Deploy Storybook to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    tags:
+      - 'v*.*.*'  # version tags like v1.2.
 
 permissions:
   contents: write
 
 jobs:
-  build-and-deploy:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed to examine tag ancestry
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20.10.0
           cache: 'npm'
+          registry-url: https://registry.npmjs.org
+  
+      - name: Match tag to package.json version
+        uses: geritol/match-tag-to-package-version@0.2.0
+        with:
+          TAG_PREFIX: v # Optional, default prefix is ""
+
+      - name: Fetch main branch for ancestry check
+        run: |
+          git fetch origin main
+
+      - name: Ensure tag commit is on main
+        id: verify_main
+        run: |
+          TAG_REF=${GITHUB_REF#refs/tags/}
+          TAG_COMMIT=$(git rev-parse "$TAG_REF")
+          if ! git merge-base --is-ancestor "$TAG_COMMIT" origin/main; then
+            echo "Tagged commit ($TAG_COMMIT) is not in main history. Skipping release pipeline."; 
+            exit 1;
+          fi
+
       - name: Install dependencies
         run: npm ci
 
@@ -34,3 +58,23 @@ jobs:
           # optional: if you have a custom domain, uncomment and set
           # cname: storybook.yourdomain.com
           keep_files: false  # overwrites previous contents
+
+      - name: Create Bundle
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm run rollup
+      
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+  
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.tag_info.outputs.tag }}
+          release_name: Release ${{ steps.tag_info.outputs.tag }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
