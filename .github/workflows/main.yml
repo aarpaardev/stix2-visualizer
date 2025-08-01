@@ -29,20 +29,6 @@ jobs:
         with:
           TAG_PREFIX: v # Optional, default prefix is ""
 
-      - name: Fetch main branch for ancestry check
-        run: |
-          git fetch origin main
-
-      - name: Ensure tag commit is on main
-        id: verify_main
-        run: |
-          TAG_REF=${GITHUB_REF#refs/tags/}
-          TAG_COMMIT=$(git rev-parse "$TAG_REF")
-          if ! git merge-base --is-ancestor "$TAG_COMMIT" origin/main; then
-            echo "Tagged commit ($TAG_COMMIT) is not in main history. Skipping release pipeline."; 
-            exit 1;
-          fi
-
       - name: Install dependencies
         run: npm ci
 
