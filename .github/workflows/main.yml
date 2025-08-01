@@ -68,8 +68,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         run: |
-          echo "@aarpaardev:registry=https://npm.pkg.github.com/" > ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
           npm publish --access public --registry=https://npm.pkg.github.com/
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
