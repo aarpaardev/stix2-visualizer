@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   release:
@@ -66,20 +67,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Authenticate to GitHub Packages registry
-        run: |
-          # Ensure no stale auth interfering
-          rm -f ~/.npmrc
-
-          # Tell npm that @aarpaardev scope uses GitHub Packages
-          npm config set @aarpaardev:registry https://npm.pkg.github.com/
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
-        env:
-          # GITHUB_TOKEN is used via ~/.npmrc above; ensure it's present
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.10.0
+          registry-url: https://npm.pkg.github.com
+          # Defaults to the user or organization that owns the workflow file
+          scope: '@aarpaardev'
   
       - name: Publish to GitHub Packages
-        run: npm publish --access public --registry=https://npm.pkg.github.com/
+        run: npm publish --access public
         env:
           # GITHUB_TOKEN is used via ~/.npmrc above; ensure it's present
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
