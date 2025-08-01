@@ -15,6 +15,15 @@
 
 ---
 
+## 🚧 Try it out / Live Demo
+
+You can interact with the live Storybook demo and explore props such as node interaction and neighbor customization on hover:
+
+**Live preview:**  
+[Open the demo on Storybook](https://mmali277.github.io/stix2-visualizer/?path=/story/props-node-interaction--neighbor-customization-on-hover)
+
+---
+
 <p align="center">
   <img width="1024" height="768" alt="STIX Visualizer Preview" src="https://github.com/user-attachments/assets/04409ada-94ab-4239-a3c7-525bfc0d710b" />
 </p>
