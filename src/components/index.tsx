@@ -145,7 +145,7 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
   const [highlightNodes, setHighlightNodes] = useState(new Set<NodeObject>());
   const [highlightLinks, setHighlightLinks] = useState(new Set<LinkObject>());
   const [hoverNode, setHoverNode] = useState<string | number | null>(null);
-  const fgRef = useRef<ReactForceRef>();
+  const fgRef = useRef<ReactForceRef | undefined>(undefined);
 
   /**
    * Create a curved line
