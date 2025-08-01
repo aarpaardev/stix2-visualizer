@@ -20,7 +20,7 @@
 You can interact with the live Storybook demo and explore props such as node interaction and neighbor customization on hover:
 
 **Live preview:**  
-[Open the demo on Storybook](https://mmali277.github.io/stix2-visualizer/?path=/story/props-node-interaction--neighbor-customization-on-hover)
+[Open the demo on Storybook](https://aarpaardev.github.io/stix2-visualizer/?path=/story/props-node-interaction--neighbor-customization-on-hover)
 
 ---
 
@@ -47,7 +47,7 @@ export default function App() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/mmali277/stix2-visualizer/main/src/examples/MandiantAPT1Report.json')
+    fetch('https://raw.githubusercontent.com/aarpaardev/stix2-visualizer/main/src/examples/MandiantAPT1Report.json')
       .then(res => res.json())
       .then(setData);
   }, []);
@@ -80,7 +80,7 @@ export default function App() {
   <script>
 
     // Load a STIX2 JSON file
-    fetch('https://raw.githubusercontent.com/mmali277/stix2-visualizer/main/src/examples/MandiantAPT1Report.json')
+    fetch('https://raw.githubusercontent.com/aarpaardev/stix2-visualizer/main/src/examples/MandiantAPT1Report.json')
       .then(res => res.json())
       .then(json => {
         props = { data: json };

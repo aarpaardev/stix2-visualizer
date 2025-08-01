@@ -1,6 +1,6 @@
 {
   "name": "@aarpaardev/stix-visualizer",
-  "version": "1.2.6",
+  "version": "1.2.12",
   "description": "STIX Visualizer is a React-based, enhanced version of the OASIS CTI STIX Visualization project. It offers interactive canvas-based rendering of STIX 2.0 bundles with support for custom nodes, links, labels, and complete styling and behavior control.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -15,7 +15,7 @@
       "require": "./dist/index.js"
     }
   },
-  "homepage": "https://github.com/mmali277/stix2-visualizer",
+  "homepage": "https://github.com/aarpaardev/stix2-visualizer",
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -25,7 +25,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mmali277/stix2-visualizer.git"
+    "url": "https://github.com/aarpaardev/stix2-visualizer.git"
   },
   "keywords": [
     "stix",
@@ -40,7 +40,7 @@
   "author": "Muhammad Haider Ali Khan",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mmali277/stix2-visualizer/issues"
+    "url": "https://github.com/aarpaardev/stix2-visualizer/issues"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^1.5.0",
