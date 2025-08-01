@@ -68,8 +68,18 @@ jobs:
 
       - name: Authenticate to GitHub Packages registry
         run: |
+          # Ensure no stale auth interfering
+          rm -f ~/.npmrc
+
+          # Tell npm that @aarpaardev scope uses GitHub Packages
           npm config set @aarpaardev:registry https://npm.pkg.github.com/
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
-
+        env:
+          # GITHUB_TOKEN is used via ~/.npmrc above; ensure it's present
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
       - name: Publish to GitHub Packages
         run: npm publish --access public --registry=https://npm.pkg.github.com/
+        env:
+          # GITHUB_TOKEN is used via ~/.npmrc above; ensure it's present
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
