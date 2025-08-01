@@ -1,6 +1,6 @@
 {
   "name": "@aarpaardev/stix-visualizer",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "STIX Visualizer is a React-based, enhanced version of the OASIS CTI STIX Visualization project. It offers interactive canvas-based rendering of STIX 2.0 bundles with support for custom nodes, links, labels, and complete styling and behavior control.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
