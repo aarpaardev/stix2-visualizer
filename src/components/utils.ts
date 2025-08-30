@@ -8,7 +8,7 @@ import type {
   ILegend,
   FormattedData,
 } from '../types';
-import { Stix2ObjectTypes } from './types';
+import { IObjectExists, IRefRelation, Stix2ObjectTypes } from './types';
 import Icons from './icons';
 
 /**
@@ -103,12 +103,22 @@ export function createLabel(
  * Check if stix object exists
  * @param {string} objectId id of object to find
  * @param {Array<StixObject>} objects stix object lists
- * @returns {boolean} whether object exists or not
+ * @returns {IObjectExists} whether object exists or not with key name if required
  */
-export const objectExists = (objectId: string, objects: Array<StixObject>): boolean => {
-  return objects.some((object) => {
-    return object.id === objectId;
+export const objectExists = (objectId: string, objects: Array<StixObject>): IObjectExists => {
+  let aarpaarId: undefined | string = undefined;
+
+  const exists = objects.some((object) => {
+    if (object.id === objectId) {
+      aarpaarId = object.aarpaarId;
+      return true;
+    }
+    return false;
   });
+  return {
+    exists: exists,
+    aarpaarId: aarpaarId,
+  };
 };
 
 /**
@@ -152,6 +162,52 @@ export const formatLegendLabel = (input: string): string => {
 };
 
 /**
+ * Create relationships from ref
+ * @param {string} refKey key name which has ref value
+ * @param {string} refValue ref value
+ * @param {StixObject} object object in which ref is found
+ * @param {Array<StixObject>} objects object in which ref is found
+ * @returns {IRefRelation} Ref relationship data
+ */
+export const createRelationShip = (
+  refKey: string,
+  refValue: string,
+  object: StixObject,
+  objects: Array<StixObject>
+): IRefRelation | null => {
+  const refObject = objectExists(refValue, objects);
+  if (refObject.exists) {
+    /**
+     * Default is case where refKey is "object_refs"
+     */
+    let source = refObject.aarpaarId;
+    let target = object.aarpaarId;
+    let label = 'refers-to';
+    /**
+     * Removing "refs" or "ref" from key.
+     */
+    const trimmedrefKey = refKey.split('_');
+    trimmedrefKey.pop();
+    const refKeyword = trimmedrefKey.join('_');
+    if (refKeyword === 'content') {
+      source = refObject.aarpaarId;
+      target = object.aarpaarId;
+      label = 'contents-of';
+    } else if (refKeyword === 'object_marking') {
+      source = refObject.aarpaarId;
+      target = object.aarpaarId;
+      label = 'applies-to';
+    }
+    return {
+      label: label,
+      source: source as string,
+      target: target as string,
+    };
+  }
+  return null;
+};
+
+/**
  * Transform stix data into graph data.
  * @param {Record<string, unknown> | JSON} data Stix2 object name
  * @param {number} nodeWidth Node width
@@ -174,6 +230,12 @@ export const formatData = (
   const stixBundle = data as StixBundle;
   if (stixBundle && stixBundle.objects) {
     const icons = loadIcons(iconShape);
+    /**
+     * Assign cuom ids
+     */
+    stixBundle.objects.forEach((object, index) => {
+      object.aarpaarId = index.toString();
+    });
     stixBundle.objects.forEach((object) => {
       if (typeof object.type === 'string') {
         if (object.type === Stix2ObjectTypes.Relationship) {
@@ -181,22 +243,24 @@ export const formatData = (
            * Make sure the node exists, for which
            * a link has already been created.
            */
-          if (
-            object.source_ref &&
-            object.target_ref &&
-            objectExists(object.source_ref, stixBundle.objects) &&
-            objectExists(object.target_ref, stixBundle.objects)
-          ) {
+          let source: IObjectExists = { exists: false };
+          let target: IObjectExists = { exists: false };
+          if (object.source_ref && object.target_ref) {
+            source = objectExists(object.source_ref, stixBundle.objects);
+            target = objectExists(object.target_ref, stixBundle.objects);
+          }
+          if (source.exists && target.exists) {
             graphData.links.push({
-              source: object.source_ref,
-              target: object.target_ref,
+              source: source.aarpaarId,
+              target: target.aarpaarId,
               label:
                 showLinkLabel && object.relationship_type ? object.relationship_type : undefined,
             });
           }
         } else {
-          if (object.id) {
-            nodes[object.id] = {
+          if (object.aarpaarId) {
+            nodes[object.aarpaarId] = {
+              aarpaarId: object.aarpaarId,
               id: object.id,
               name: showNodeLabel ? (object.name ?? object.type) : undefined,
               img: icons[object.type] ?? icons[Stix2ObjectTypes.CustomObject],
@@ -206,28 +270,55 @@ export const formatData = (
               legendSet.add(object.type);
               legends.push({
                 type: object.type,
-                icon: nodes[object.id].img,
+                icon: nodes[object.aarpaarId].img,
               });
             }
           }
           /**
-           * Also add marking definition as relation.
+           * Also add relations agains _refs and _ref
            */
-          if (
-            object.object_marking_refs &&
-            Array.isArray(object.object_marking_refs) &&
-            object.object_marking_refs.length > 0
-          ) {
-            object.object_marking_refs.forEach((ref) => {
-              if (objectExists(ref, stixBundle.objects)) {
+          const refs = Object.keys(object).filter((key) => {
+            // e.g. _ref
+            if (
+              object.type !== Stix2ObjectTypes.Relationship &&
+              (key.endsWith('_ref') || key.endsWith('_refs'))
+            ) {
+              return true;
+            }
+            return false;
+          });
+          refs.forEach((refKey) => {
+            const objectRefValue = object[refKey as keyof typeof object];
+            if (Array.isArray(objectRefValue)) {
+              objectRefValue.forEach((ref) => {
+                let relation: IRefRelation | null = null;
+                if (typeof ref === 'string') {
+                  relation = createRelationShip(refKey, ref, object, stixBundle.objects);
+                  if (relation) {
+                    graphData.links.push({
+                      source: relation.source,
+                      target: relation.target,
+                      label: showLinkLabel ? relation.label : undefined,
+                    });
+                  }
+                }
+              });
+            } else if (typeof objectRefValue === 'string') {
+              const relation = createRelationShip(
+                refKey,
+                objectRefValue,
+                object,
+                stixBundle.objects
+              );
+              if (relation) {
                 graphData.links.push({
-                  source: ref,
-                  target: object.id,
-                  label: showLinkLabel ? 'applies-to' : undefined,
+                  source: relation.source,
+                  target: relation.target,
+                  label: showLinkLabel ? relation.label : undefined,
                 });
               }
-            });
-          }
+            }
+          });
         }
       }
     });
