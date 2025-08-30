@@ -162,8 +162,13 @@ interface ILegendOptions {
   containerStyle?: React.CSSProperties;
 }
 
+interface INoiseOptions {
+  ignoreReportObjectRefs?: boolean;
+}
+
 interface Stix2VisualizerProps {
   data: StixBundle | object;
+  noiseOptions?: INoiseOptions;
   nodeOptions?: INodeOptions;
   linkOptions?: ILinkOptions;
   legendOptions?: ILegendOptions;

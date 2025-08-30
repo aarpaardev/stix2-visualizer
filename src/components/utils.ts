@@ -109,7 +109,7 @@ export const objectExists = (objectId: string, objects: Array<StixObject>): IObj
   let aarpaarId: undefined | string = undefined;
 
   const exists = objects.some((object) => {
-    if (object.id === objectId) {
+    if (object.id === objectId && object.type !== Stix2ObjectTypes.Relationship) {
       aarpaarId = object.aarpaarId;
       return true;
     }
@@ -169,7 +169,7 @@ export const formatLegendLabel = (input: string): string => {
  * @param {Array<StixObject>} objects object in which ref is found
  * @returns {IRefRelation} Ref relationship data
  */
-export const createRelationShip = (
+export const createRelationship = (
   refKey: string,
   refValue: string,
   object: StixObject,
@@ -211,6 +211,7 @@ export const createRelationShip = (
  * Transform stix data into graph data.
  * @param {Record<string, unknown> | JSON} data Stix2 object name
  * @param {number} nodeWidth Node width
+ * @param {boolean} ignoreReportObjectRefs Whether to ignore "object_refs" on Report object type.
  * @param {boolean} showNodeLabel Whether to show label on node
  * @param {boolean} showLinkLabel Whether to show label on link
  * @param {'round'} iconShape In which shape the icons should be
@@ -219,6 +220,7 @@ export const createRelationShip = (
 export const formatData = (
   data: Record<string, unknown> | object | StixBundle,
   nodeWidth: number,
+  ignoreReportObjectRefs = true,
   showNodeLabel = true,
   showLinkLabel = true,
   iconShape: 'round' = 'round'
@@ -283,6 +285,14 @@ export const formatData = (
               object.type !== Stix2ObjectTypes.Relationship &&
               (key.endsWith('_ref') || key.endsWith('_refs'))
             ) {
+              if (ignoreReportObjectRefs) {
+                /**
+                 * To remove unnecessary noise.
+                 */
+                if (object.type === Stix2ObjectTypes.Report && key === 'object_refs') {
+                  return false;
+                }
+              }
               return true;
             }
             return false;
@@ -293,7 +303,7 @@ export const formatData = (
               objectRefValue.forEach((ref) => {
                 let relation: IRefRelation | null = null;
                 if (typeof ref === 'string') {
-                  relation = createRelationShip(refKey, ref, object, stixBundle.objects);
+                  relation = createRelationship(refKey, ref, object, stixBundle.objects);
                   if (relation) {
                     graphData.links.push({
                       source: relation.source,
@@ -304,7 +314,7 @@ export const formatData = (
                 }
               });
             } else if (typeof objectRefValue === 'string') {
-              const relation = createRelationShip(
+              const relation = createRelationship(
                 refKey,
                 objectRefValue,
                 object,
