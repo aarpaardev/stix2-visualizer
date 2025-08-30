@@ -25,6 +25,10 @@ const DEFAULT_ZOOM_LEVEL = 3;
 export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
   const properties: Stix2VisualizerProps = {
     data: props.data,
+    noiseOptions: {
+      ignoreReportObjectRefs: true,
+      ...props.noiseOptions,
+    },
     nodeOptions: {
       size: 12,
       disableZoomOnClick: false,
@@ -288,7 +292,7 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
   );
 
   const transformedGraphData = useMemo(() => {
-    const data = formatData(properties.data, 0.1);
+    const data = formatData(properties.data, 0.1, properties.noiseOptions?.ignoreReportObjectRefs);
     return data;
   }, [properties.data]);
 
