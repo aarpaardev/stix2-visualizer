@@ -67,6 +67,7 @@ interface ExternalReference {
 
 interface StixObject {
   type: Stix2ObjectTypes;
+  aarpaarId?: string;
   id: string;
   created: string;
   modified?: string;
@@ -96,10 +97,21 @@ interface StixObject {
   target_ref?: string;
 }
 
+interface IObjectExists {
+  exists: boolean;
+  aarpaarId?: string;
+}
+
+interface IRefRelation {
+  source: string;
+  target: string;
+  label: string;
+}
+
 type StixBundle = {
   type: Stix2ObjectTypes.Bundle;
   id: string;
   spec_version: string;
   objects: StixObject[];
 };
-export { StixBundle, StixObject, Stix2ObjectTypes };
+export { StixBundle, StixObject, Stix2ObjectTypes, IObjectExists, IRefRelation };
