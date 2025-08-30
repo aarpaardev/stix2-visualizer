@@ -160,6 +160,7 @@ interface ILegendOptions {
   display?: boolean;
   position?: LegendPosition;
   containerStyle?: React.CSSProperties;
+  displayignoreReportObjectRefsCheckBox?: boolean;
 }
 
 interface INoiseOptions {

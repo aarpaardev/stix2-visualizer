@@ -104,6 +104,7 @@ export default function App() {
 | `data`             | `StixBundle \| object` | ✅      | A valid [STIX 2.x Bundle JSON object](https://oasis-open.github.io/cti-documentation/stix/intro) that defines the entities and relationships to be visualized. Refer to [this sample STIX bundle](https://oasis-open.github.io/cti-documentation/examples/example_json/apt1.json) for reference. |
 | `nodeOptions`      | `INodeOptions`         | ❌      | Configuration for visual node appearance (e.g., color, radius, interactivity). See table below. |
 | `linkOptions`      | `ILinkOptions`         | ❌      | Configuration for link appearance and behavior. See table below. |
+| `noiseOptions`      | `INoiseOptions`       | ❌      | Configuration for noise options (e.g., "object_refs" relations with "Report" object). See table below. |
 | `legendOptions`    | `ILegendOptions`       | ❌      | Options for showing and positioning the legend. See table below. |
 | `directionOptions` | `ILinkDirectionOptions`| ❌      | Defines directional indicators on links like arrows and particles. See table below. |
 | `linkLabelOptions` | `ILabelOptions`        | ❌      | Options for displaying text labels on links. See table below. |
@@ -207,13 +208,21 @@ export default function App() {
 }
 ```
 
+#### `noiseOptions` Props
+
+| Prop            | Type                       | Default       | Description                                                                                 |
+|-----------------|----------------------------|---------------|---------------------------------------------------------------------------------------------|
+| `ignoreReportObjectRefs`       | `boolean`                  | `true`        | Whether to show the "object_refs" relations to "Report" object or not.                                                                 |
+
+
 #### `legendOptions` Props
 
 | Prop            | Type                       | Default       | Description                                                                                 |
 |-----------------|----------------------------|---------------|---------------------------------------------------------------------------------------------|
 | `display`       | `boolean`                  | `true`        | Whether to show the legend.                                                                 |
 | `position`      | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'top-right'` | Position of the legend in the container.                |
-| `containerStyle`| `React.CSSProperties`      | `undefined`   | Optional custom style object for the legend container.                                      |
+| `containerStyle`| `React.CSSProperties`      | `undefined`   | Optional custom style object for the legend container.  
+| `displayignoreReportObjectRefsCheckBox`| `boolean`  | `true`  | Optional Checkbox to reduce noise by ignoring certain relations (see noiseOption prop).                                     |
 
 
 #### `nodeLabelOptions` Props

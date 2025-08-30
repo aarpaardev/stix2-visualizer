@@ -107,6 +107,7 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
       ...props.linkOptions,
     },
     legendOptions: {
+      displayignoreReportObjectRefsCheckBox: true,
       display: true,
       position: 'top-right',
       ...props.legendOptions,
@@ -149,6 +150,9 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
   const [highlightNodes, setHighlightNodes] = useState(new Set<NodeObject>());
   const [highlightLinks, setHighlightLinks] = useState(new Set<LinkObject>());
   const [hoverNode, setHoverNode] = useState<string | number | null>(null);
+  const [ignoreNoise, setIgnoreNoise] = useState<boolean | undefined>(
+    properties.noiseOptions?.ignoreReportObjectRefs
+  );
   const fgRef = useRef<ReactForceRef | undefined>(undefined);
 
   /**
@@ -292,9 +296,9 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
   );
 
   const transformedGraphData = useMemo(() => {
-    const data = formatData(properties.data, 0.1, properties.noiseOptions?.ignoreReportObjectRefs);
+    const data = formatData(properties.data, 0.1, ignoreNoise);
     return data;
-  }, [properties.data]);
+  }, [properties.data, ignoreNoise]);
 
   useEffect(() => {
     const fg = fgRef.current;
@@ -508,6 +512,32 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
             ...properties.legendOptions.containerStyle,
           }}
         >
+          {properties.legendOptions?.displayignoreReportObjectRefsCheckBox && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                marginBottom: '4px',
+                borderBottom: '1px dashed #999',
+              }}
+            >
+              <label>
+                <input
+                  style={{ width: 15, height: 15, marginRight: 8 }}
+                  type="checkbox"
+                  checked={ignoreNoise}
+                  onChange={() => {
+                    if (properties.noiseOptions) {
+                      properties.noiseOptions.ignoreReportObjectRefs = !ignoreNoise;
+                      setIgnoreNoise(!ignoreNoise);
+                    }
+                  }}
+                />
+                Reduce Noise (If Possible)
+              </label>
+              {/* <span>{formatLegendLabel(legend.type)}</span> */}
+            </div>
+          )}
           {transformedGraphData.legends.map((legend, index) => {
             return (
               <div
