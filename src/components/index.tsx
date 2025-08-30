@@ -10,6 +10,7 @@ import {
   ReactForceRef,
   ZoomTransformation,
   LegendPosition,
+  Stix2ObjectTypes,
 } from '../types';
 
 /**
@@ -150,6 +151,7 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
   const [highlightNodes, setHighlightNodes] = useState(new Set<NodeObject>());
   const [highlightLinks, setHighlightLinks] = useState(new Set<LinkObject>());
   const [hoverNode, setHoverNode] = useState<string | number | null>(null);
+  const [ignoredLegendSet, setIgnoredLegendSet] = useState<Set<string>>(new Set());
   const [ignoreNoise, setIgnoreNoise] = useState<boolean | undefined>(
     properties.noiseOptions?.ignoreReportObjectRefs
   );
@@ -296,9 +298,9 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
   );
 
   const transformedGraphData = useMemo(() => {
-    const data = formatData(properties.data, 0.1, ignoreNoise);
+    const data = formatData(properties.data, 0.1, ignoreNoise, ignoredLegendSet);
     return data;
-  }, [properties.data, ignoreNoise]);
+  }, [properties.data, ignoreNoise, ignoredLegendSet]);
 
   useEffect(() => {
     const fg = fgRef.current;
@@ -475,7 +477,7 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
    * @param {LinkObject} link - The link object.
    * @returns {string} The color of moving particles and arrow.
    */
-  const ArrowAndParticleColor = useCallback((link: LinkObject): string => {
+  const arrowAndParticleColor = useCallback((link: LinkObject): string => {
     /**
      * Its a bug in this library, so if a string is provided
      * pass it to the function to make it work.
@@ -487,6 +489,23 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
     }
     return '#00000';
   }, []);
+
+  /**
+   * Toggle certain legend to show or not.
+   * @param {Stix2ObjectTypes | string} legendType legend type.
+   * @returns {void}
+   */
+  const toggleLegendDisplay = (legendType: Stix2ObjectTypes | string): void => {
+    setIgnoredLegendSet((prevSet) => {
+      const newSet = new Set(prevSet);
+      if (newSet.has(legendType)) {
+        newSet.delete(legendType);
+      } else {
+        newSet.add(legendType);
+      }
+      return newSet;
+    });
+  };
 
   const positionStyles: Record<LegendPosition, React.CSSProperties> = {
     'top-left': { top: 10, left: 10 },
@@ -533,16 +552,23 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
                     }
                   }}
                 />
-                Reduce Noise (If Possible)
+                Reduce Noise
               </label>
-              {/* <span>{formatLegendLabel(legend.type)}</span> */}
             </div>
           )}
           {transformedGraphData.legends.map((legend, index) => {
             return (
               <div
                 key={index}
-                style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginBottom: '4px',
+                  cursor: 'pointer',
+                }}
+                onClick={() => {
+                  toggleLegendDisplay(legend.type);
+                }}
               >
                 {legend.icon && (
                   <img
@@ -551,7 +577,18 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
                     style={{ width: 20, height: 20, marginRight: 8 }}
                   />
                 )}
-                <span>{formatLegendLabel(legend.type)}</span>
+                {ignoredLegendSet.has(legend.type) ? (
+                  <del
+                    style={{
+                      color: 'rgba(107, 112, 115, 0.7)',
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    <span>{formatLegendLabel(legend.type)}</span>
+                  </del>
+                ) : (
+                  <span>{formatLegendLabel(legend.type)}</span>
+                )}
               </div>
             );
           })}
@@ -573,7 +610,7 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
          */
         linkCanvasObject={drawLink}
         onLinkClick={handleLinkClick}
-        linkColor={ArrowAndParticleColor}
+        linkColor={arrowAndParticleColor}
         onLinkHover={handleLinkHover}
         linkCurvature={properties.linkOptions?.curvature}
         /**
