@@ -169,6 +169,8 @@ interface INoiseOptions {
 
 interface Stix2VisualizerProps {
   data: StixBundle | object;
+  height?: number;
+  width?: number;
   noiseOptions?: INoiseOptions;
   nodeOptions?: INodeOptions;
   linkOptions?: ILinkOptions;

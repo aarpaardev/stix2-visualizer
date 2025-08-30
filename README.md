@@ -102,6 +102,9 @@ export default function App() {
 | Prop               | Type                   | Required | Description |
 |--------------------|------------------------|----------|-------------|
 | `data`             | `StixBundle \| object` | ✅      | A valid [STIX 2.x Bundle JSON object](https://oasis-open.github.io/cti-documentation/stix/intro) that defines the entities and relationships to be visualized. Refer to [this sample STIX bundle](https://oasis-open.github.io/cti-documentation/examples/example_json/apt1.json) for reference. |
+| `height`           | `number`               | ❌      | Height of canvas (default is undefined)|
+| `width`            | `number`               | ❌      | With of canvas (default is undefined)|
+| `nodeOptions`      | `INodeOptions`         | ❌      | Configuration for visual node appearance (e.g., color, radius, interactivity). See table below. |
 | `nodeOptions`      | `INodeOptions`         | ❌      | Configuration for visual node appearance (e.g., color, radius, interactivity). See table below. |
 | `linkOptions`      | `ILinkOptions`         | ❌      | Configuration for link appearance and behavior. See table below. |
 | `noiseOptions`      | `INoiseOptions`       | ❌      | Configuration for noise options (e.g., "object_refs" relations with "Report" object). See table below. |

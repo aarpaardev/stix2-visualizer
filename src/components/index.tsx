@@ -26,6 +26,8 @@ const DEFAULT_ZOOM_LEVEL = 3;
 export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
   const properties: Stix2VisualizerProps = {
     data: props.data,
+    height: props.height,
+    width: props.width,
     noiseOptions: {
       ignoreReportObjectRefs: true,
       ...props.noiseOptions,
@@ -598,6 +600,8 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
         ref={fgRef}
         graphData={transformedGraphData.data}
         nodeId="aarpaarId"
+        height={properties.height}
+        width={properties.width}
         /**
          * - Node Props
          */
