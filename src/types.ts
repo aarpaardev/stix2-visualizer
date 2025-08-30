@@ -160,6 +160,7 @@ interface ILegendOptions {
   display?: boolean;
   position?: LegendPosition;
   containerStyle?: React.CSSProperties;
+  displayignoreReportObjectRefsCheckBox?: boolean;
 }
 
 interface INoiseOptions {
@@ -168,6 +169,8 @@ interface INoiseOptions {
 
 interface Stix2VisualizerProps {
   data: StixBundle | object;
+  height?: number;
+  width?: number;
   noiseOptions?: INoiseOptions;
   nodeOptions?: INodeOptions;
   linkOptions?: ILinkOptions;

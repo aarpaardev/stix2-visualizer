@@ -212,6 +212,7 @@ export const createRelationship = (
  * @param {Record<string, unknown> | JSON} data Stix2 object name
  * @param {number} nodeWidth Node width
  * @param {boolean} ignoreReportObjectRefs Whether to ignore "object_refs" on Report object type.
+ * @param {undefined | Set<string>} ignoredObjectTypes objects to ignore or skip.
  * @param {boolean} showNodeLabel Whether to show label on node
  * @param {boolean} showLinkLabel Whether to show label on link
  * @param {'round'} iconShape In which shape the icons should be
@@ -221,6 +222,7 @@ export const formatData = (
   data: Record<string, unknown> | object | StixBundle,
   nodeWidth: number,
   ignoreReportObjectRefs = true,
+  ignoredObjectTypes: undefined | Set<string> = undefined,
   showNodeLabel = true,
   showLinkLabel = true,
   iconShape: 'round' = 'round'
@@ -229,14 +231,25 @@ export const formatData = (
   const nodes: Record<string, NodeObject> = {};
   const legends: Array<ILegend> = [];
   const legendSet = new Set<string>();
-  const stixBundle = data as StixBundle;
+  const stixBundle = { ...data } as StixBundle;
   if (stixBundle && stixBundle.objects) {
     const icons = loadIcons(iconShape);
     /**
      * Assign cuom ids
      */
-    stixBundle.objects.forEach((object, index) => {
-      object.aarpaarId = index.toString();
+    stixBundle.objects = stixBundle.objects.filter((object, index) => {
+      if (!legendSet.has(object.type)) {
+        legendSet.add(object.type);
+        legends.push({
+          type: object.type,
+          icon: icons[object.type] ?? icons[Stix2ObjectTypes.CustomObject],
+        });
+      }
+      if (!(ignoredObjectTypes && ignoredObjectTypes.has(object.type))) {
+        object.aarpaarId = index.toString();
+        return true;
+      }
+      return false;
     });
     stixBundle.objects.forEach((object) => {
       if (typeof object.type === 'string') {
@@ -268,13 +281,6 @@ export const formatData = (
               img: icons[object.type] ?? icons[Stix2ObjectTypes.CustomObject],
               val: nodeWidth,
             };
-            if (!legendSet.has(object.type)) {
-              legendSet.add(object.type);
-              legends.push({
-                type: object.type,
-                icon: nodes[object.aarpaarId].img,
-              });
-            }
           }
           /**
            * Also add relations agains _refs and _ref
