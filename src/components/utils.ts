@@ -235,7 +235,8 @@ export const formatData = (
   if (stixBundle && stixBundle.objects) {
     const icons = loadIcons(iconShape);
     /**
-     * Assign cuom ids
+     * Filter objects on the basis of object types
+     * filters.
      */
     stixBundle.objects = stixBundle.objects.filter((object) => {
       if (!legendSet.has(object.type)) {
@@ -284,7 +285,6 @@ export const formatData = (
            * Also add relations agains _refs and _ref
            */
           const refs = Object.keys(object).filter((key) => {
-            // e.g. _ref
             if (
               object.type !== Stix2ObjectTypes.Relationship &&
               (key.endsWith('_ref') || key.endsWith('_refs'))
@@ -301,38 +301,40 @@ export const formatData = (
             }
             return false;
           });
-          refs.forEach((refKey) => {
-            const objectRefValue = object[refKey as keyof typeof object];
-            if (Array.isArray(objectRefValue)) {
-              objectRefValue.forEach((ref) => {
-                let relation: IRefRelation | null = null;
-                if (typeof ref === 'string') {
-                  relation = createRelationship(refKey, ref, object, stixBundle.objects);
-                  if (relation) {
-                    graphData.links.push({
-                      source: relation.source,
-                      target: relation.target,
-                      label: showLinkLabel ? relation.label : undefined,
-                    });
+          if (!ignoredObjectTypes?.has(Stix2ObjectTypes.Relationship)) {
+            refs.forEach((refKey) => {
+              const objectRefValue = object[refKey as keyof typeof object];
+              if (Array.isArray(objectRefValue)) {
+                objectRefValue.forEach((ref) => {
+                  let relation: IRefRelation | null = null;
+                  if (typeof ref === 'string') {
+                    relation = createRelationship(refKey, ref, object, stixBundle.objects);
+                    if (relation) {
+                      graphData.links.push({
+                        source: relation.source,
+                        target: relation.target,
+                        label: showLinkLabel ? relation.label : undefined,
+                      });
+                    }
                   }
-                }
-              });
-            } else if (typeof objectRefValue === 'string') {
-              const relation = createRelationship(
-                refKey,
-                objectRefValue,
-                object,
-                stixBundle.objects
-              );
-              if (relation) {
-                graphData.links.push({
-                  source: relation.source,
-                  target: relation.target,
-                  label: showLinkLabel ? relation.label : undefined,
                 });
+              } else if (typeof objectRefValue === 'string') {
+                const relation = createRelationship(
+                  refKey,
+                  objectRefValue,
+                  object,
+                  stixBundle.objects
+                );
+                if (relation) {
+                  graphData.links.push({
+                    source: relation.source,
+                    target: relation.target,
+                    label: showLinkLabel ? relation.label : undefined,
+                  });
+                }
               }
-            }
-          });
+            });
+          }
         }
       }
     });
