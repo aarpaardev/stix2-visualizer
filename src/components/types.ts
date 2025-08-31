@@ -67,7 +67,6 @@ interface ExternalReference {
 
 interface StixObject {
   type: Stix2ObjectTypes;
-  aarpaarId?: string;
   id: string;
   created: string;
   modified?: string;
@@ -99,7 +98,7 @@ interface StixObject {
 
 interface IObjectExists {
   exists: boolean;
-  aarpaarId?: string;
+  id?: string;
 }
 
 interface IRefRelation {
