@@ -599,7 +599,6 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
       <ForceGraph2D
         ref={fgRef}
         graphData={transformedGraphData.data}
-        nodeId="aarpaarId"
         height={properties.height}
         width={properties.width}
         /**

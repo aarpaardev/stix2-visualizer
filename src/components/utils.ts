@@ -106,18 +106,18 @@ export function createLabel(
  * @returns {IObjectExists} whether object exists or not with key name if required
  */
 export const objectExists = (objectId: string, objects: Array<StixObject>): IObjectExists => {
-  let aarpaarId: undefined | string = undefined;
+  let id: undefined | string = undefined;
 
   const exists = objects.some((object) => {
     if (object.id === objectId && object.type !== Stix2ObjectTypes.Relationship) {
-      aarpaarId = object.aarpaarId;
+      id = object.id;
       return true;
     }
     return false;
   });
   return {
     exists: exists,
-    aarpaarId: aarpaarId,
+    id: id,
   };
 };
 
@@ -180,8 +180,8 @@ export const createRelationship = (
     /**
      * Default is case where refKey is "object_refs"
      */
-    let source = refObject.aarpaarId;
-    let target = object.aarpaarId;
+    let source = refObject.id;
+    let target = object.id;
     let label = 'refers-to';
     /**
      * Removing "refs" or "ref" from key.
@@ -190,12 +190,12 @@ export const createRelationship = (
     trimmedrefKey.pop();
     const refKeyword = trimmedrefKey.join('_');
     if (refKeyword === 'content') {
-      source = refObject.aarpaarId;
-      target = object.aarpaarId;
+      source = refObject.id;
+      target = object.id;
       label = 'contents-of';
     } else if (refKeyword === 'object_marking') {
-      source = refObject.aarpaarId;
-      target = object.aarpaarId;
+      source = refObject.id;
+      target = object.id;
       label = 'applies-to';
     }
     return {
@@ -237,7 +237,7 @@ export const formatData = (
     /**
      * Assign cuom ids
      */
-    stixBundle.objects = stixBundle.objects.filter((object, index) => {
+    stixBundle.objects = stixBundle.objects.filter((object) => {
       if (!legendSet.has(object.type)) {
         legendSet.add(object.type);
         legends.push({
@@ -246,7 +246,6 @@ export const formatData = (
         });
       }
       if (!(ignoredObjectTypes && ignoredObjectTypes.has(object.type))) {
-        object.aarpaarId = index.toString();
         return true;
       }
       return false;
@@ -266,16 +265,15 @@ export const formatData = (
           }
           if (source.exists && target.exists) {
             graphData.links.push({
-              source: source.aarpaarId,
-              target: target.aarpaarId,
+              source: source.id,
+              target: target.id,
               label:
                 showLinkLabel && object.relationship_type ? object.relationship_type : undefined,
             });
           }
         } else {
-          if (object.aarpaarId) {
-            nodes[object.aarpaarId] = {
-              aarpaarId: object.aarpaarId,
+          if (object.id) {
+            nodes[object.id] = {
               id: object.id,
               name: showNodeLabel ? (object.name ?? object.type) : undefined,
               img: icons[object.type] ?? icons[Stix2ObjectTypes.CustomObject],
