@@ -157,6 +157,12 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
   const [ignoreNoise, setIgnoreNoise] = useState<boolean | undefined>(
     properties.noiseOptions?.ignoreReportObjectRefs
   );
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const [dimensions, setDimensions] = useState({
+    width: properties.width,
+    height: properties.height,
+  });
   const fgRef = useRef<ReactForceRef | undefined>(undefined);
 
   /**
@@ -319,6 +325,27 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
     }
   }, [properties.linkOptions?.distance]);
 
+  useEffect(() => {
+    if (!containerRef.current) {
+      return;
+    }
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setDimensions({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    // eslint-disable-next-line consistent-return, @typescript-eslint/explicit-function-return-type
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
   /**
    * Updates the currently highlighted elements (e.g., nodes or links) in the graph.
    * @returns {void}
@@ -519,7 +546,13 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
   };
 
   return (
-    <div>
+    <div
+      style={{
+        height: properties.height || 'auto',
+        width: properties.width || 'auto',
+        position: 'relative',
+      }}
+    >
       {properties.legendOptions?.display && properties.legendOptions.position && (
         <div
           style={{
@@ -599,8 +632,8 @@ export const Stix2Visualizer: React.FC<Stix2VisualizerProps> = (props) => {
       <ForceGraph2D
         ref={fgRef}
         graphData={transformedGraphData.data}
-        height={properties.height}
-        width={properties.width}
+        height={dimensions.height}
+        width={dimensions.width}
         /**
          * - Node Props
          */
